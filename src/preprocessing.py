@@ -8,7 +8,7 @@ from typing import List, Tuple
 NUM_TSRC: int = 24  # 24 source times for our datasets.
 
 
-def get_corrs(h5fname: str, corr_tags: List[str]) -> list:
+def get_corrs(h5fname: str, corr_tags: List[str]) -> List[npt.NDArray]:
     """
     Retrieve correlator data from hdf5 cache. Order as (t, conf, tsrc).
 
@@ -93,7 +93,6 @@ def normalize_1d(corr: npt.Array) -> Tuple[npt.Array, npt.NDArray]:
     Returns:
         normalized_corr: 1d numpy.array, normalized correlator. Order as (t).
         normalzation_factors: 2d numpy.array, normalization factors. Order as (t, other).
-
     """
     normalzation_factors = 1. / np.mean(corr, axis=0)
     normalized_corr = corr / np.mean(corr, axis=0)
