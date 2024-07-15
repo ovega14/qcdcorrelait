@@ -1,10 +1,12 @@
 import h5py
 import numpy as np
+import gvar as gv
 import torch
 
 import numpy.typing as npt
 from typing import List, Tuple, Optional
 
+from utils import tensor_means_stds_by_axis0
 
 
 """Utilities for processing correlator data."""
@@ -33,6 +35,59 @@ def get_corrs(h5fname: str, corr_tags: List[str]) -> List[npt.NDArray]:
         corr = np_container.transpose().reshape((corr_flat.shape[-1], -1, NUM_TSRC))
         result.append(corr)
     return result
+
+
+def preprocess_data(
+    corr_i: npt.NDArray,
+    corr_o: npt.NDArray,
+    train_ind_list: List[int],
+    bc_ind_list: List[int],
+    unlab_ind_list: List[int]
+) -> dict[str, np.NDArray]:
+    """
+    Preprocesses the correlator dataset into a dictionary of input/output data, means, and stdevs.
+
+    Args:
+        corr_i: Input correlator data, 3d numpy array
+        corr_o: Output correlator data, 3d numpy array
+        train_ind_list: Source time indices for training
+        bc_ind_list: Source time indices for bias-correction
+        unlab_ind_list: Source time indices for unlabeled data.
+
+    Returns:
+        dict_data: Dictionary of preprocessed data.
+    """
+    corr_i_tensor = tensor_data_by_ind_list(corr_i)
+    corr_o_tensor = tensor_data_by_ind_list(corr_o)
+
+    corr_i_train_tensor = tensor_data_by_ind_list(corr_i, ind_list=train_ind_list)
+    corr_o_train_tensor = tensor_data_by_ind_list(corr_o, ind_list=train_ind_list)
+
+    corr_i_bc_tensor = tensor_data_by_ind_list(corr_i, ind_list=bc_ind_list)
+    corr_o_bc_tensor = tensor_data_by_ind_list(corr_o, ind_list=bc_ind_list)
+
+    corr_i_unlab_tensor = tensor_data_by_ind_list(corr_i, ind_list=unlab_ind_list)
+    corr_o_unlab_tensor = tensor_data_by_ind_list(corr_o, ind_list=unlab_ind_list)
+
+    # Compute means and stds of training data for normalization & denormalization
+    corr_i_train_means, corr_i_train_stds = tensor_means_stds_by_axis0(corr_i_train_tensor)
+    corr_o_train_means, corr_o_train_stds = tensor_means_stds_by_axis0(corr_o_train_tensor)
+
+    dict_data: dict[str, np.NDArray] = dict()
+    dict_data["corr_i_tensor"] = corr_i_tensor
+    dict_data["corr_o_tensor"] = corr_o_tensor
+    dict_data["corr_i_train_tensor"] = corr_i_train_tensor
+    dict_data["corr_o_train_tensor"] = corr_o_train_tensor
+    dict_data["corr_i_bc_tensor"] = corr_i_bc_tensor
+    dict_data["corr_o_bc_tensor"] = corr_o_bc_tensor
+    dict_data["corr_i_unlab_tensor"] = corr_i_unlab_tensor
+    dict_data["corr_o_unlab_tensor"] = corr_o_unlab_tensor
+    dict_data["corr_i_train_means"] = corr_i_train_means
+    dict_data["corr_i_train_stds"] = corr_i_train_stds
+    dict_data["corr_o_train_means"] = corr_o_train_means
+    dict_data["corr_o_train_stds"] = corr_o_train_stds
+    
+    return dict_data
 
 
 #===================================================================================================
@@ -269,7 +324,7 @@ def tensor_data_by_ind_list(
 
     Returns:
         Reshaped PyTorch tensor of `raw_corr` with source times filtered by `ind_list`, shaped as
-        [num_cfgs * len(ind_list), num_tau].
+        `[num_cfgs * len(ind_list), num_tau]`.
     """
     raw_corr = torch.from_numpy(raw_corr[:, :, ind_list]).double()
     return torch.flatten(raw_corr, start_dim=1, end_dim=-1).T
@@ -292,3 +347,30 @@ def tensor_data_to_np_data_3d(
     """
     np_corr = tensor_corr.T.numpy().reshape((num_taus, num_cfgs, -1))
     return np_corr
+
+
+def convert_to_gvars(
+    dict_orig_corrs: dict[str, npt.NDArray], 
+    averages_tsrc: Optional[bool] = False
+) -> gv.Dataset:
+    """
+    Converts correlators in the form [Nt, nconf, Ntsrc] to a gvar dataset.
+
+    Args:
+        dict_orig_corrs: dict of correlators in the original format
+            keys: names - list of strings, giving the key names to corr in corrs
+            values: corrs - list of numpy arrays, each of form (Nt, nconf, Ntsrc)
+        averages_tsrc (bool): averages over the time sources (3d arrays of corrrelators)
+            or not (2d arrays of correlators)
+
+    Returns:
+        Correlated gvar dataset with correlators referenced by names
+    """
+    corr_dict = {}
+    for name, corr in dict_orig_corrs.items():
+        if averages_tsrc:
+            # corr_dict[name] = average_tsrc(corr)
+            corr_dict[name] = np.average(corr, axis=-1).transpose() # (n_cf, n_tau)
+        else:
+            corr_dict[name] = corr.transpose() # (n_cf, n_tau)
+    return gv.dataset.avg_data(corr_dict)
