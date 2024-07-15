@@ -6,7 +6,7 @@ from typing import List, Optional
 
 class MLP(torch.nn.Module):
     """
-    Basic multilayer perceptron. Uses a combination of linear, batch norm, and activation layers.
+    Basic multilayer perceptron. Uses a combination of linear and batch norm layers.
 
     Args:
         input_dim: Number of features in input data
@@ -39,7 +39,7 @@ class MLP(torch.nn.Module):
         for i in range(1, self.depth - 1):
             fc_layers.append(torch.nn.Linear(hidden_dims[i-1], hidden_dims[i]))
         fc_layers.append(torch.nn.Linear(hidden_dims[-1], output_dim))
-        self.fc_layers = torch.nn.ModuleList(*fc_layers)
+        self.fc_layers = torch.nn.ModuleList(fc_layers)
 
         # (Optional) batch normalization layers
         if batch_norm:
@@ -47,7 +47,7 @@ class MLP(torch.nn.Module):
             bn_layers.append(torch.nn.BatchNorm1d(output_dim))
         else:
             bn_layers = [torch.nn.Identity()] * self.depth
-        bn_layers = torch.nn.ModuleList(*bn_layers)
+        bn_layers = torch.nn.ModuleList(bn_layers)
 
         self.activation = activation
 
@@ -64,7 +64,7 @@ class MLP(torch.nn.Module):
 
 class CNN(torch.nn.Module):
     """
-    Basic convolutional neural network.
+    Basic convolutional neural network. Uses a combination of 1d conv and batch norm layers
 
     Args:
         in_channels: Number of channels in input data
@@ -110,7 +110,7 @@ class CNN(torch.nn.Module):
                                 out_channels=out_chanels,
                                 kernel_size=kernel_size
                             ))
-        self.conv_layers = torch.nn.ModuleList(*conv_layers)
+        self.conv_layers = torch.nn.ModuleList(conv_layers)
         
         # (Optional) batch normalization layers
         if batch_norm:
@@ -118,7 +118,7 @@ class CNN(torch.nn.Module):
             bn_layers.append(torch.nn.BatchNorm1d(out_chanels))
         else:
             bn_layers = [torch.nn.Identity()] * self.depth 
-        bn_layers = torch.nn.ModuleList(*bn_layers)
+        bn_layers = torch.nn.ModuleList(bn_layers)
 
         self.activation = activation
 
@@ -138,4 +138,36 @@ class CNN(torch.nn.Module):
         x = temp + x
         
         x = torch.squeeze(x, dim=1)
+        return x
+    
+
+class LinearModel(torch.nn.Module):
+    """
+    A basic fully linear model with a single layer.
+
+    Args:
+        input_dim: Number of features in input data
+        output_dim: Number of features in output_data
+
+    Attributes:
+        layers: ModuleList of linear layers
+        depth: Number of linear layers in the network
+    """
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+    ):
+        super().__init__()
+
+        self.layers = torch.nn.ModuleList([
+            torch.nn.Linear(input_dim, output_dim)
+        ])
+        self.depth = len(self.layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        temp = x
+        for i in range(self.depth):
+            temp = self.layers[i](temp)
+        x = temp
         return x
