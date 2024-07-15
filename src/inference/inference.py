@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import argparse
 import copy
+import matplotlib.pyplot as plt
 
 from .. plotting import save_plot
 
@@ -94,3 +95,11 @@ def predict(
 #===================================================================================================
 # VISUALIZATION OF FEATURE IMPORTANCE AND INTERPRETABILITY
 #===================================================================================================
+def get_feature_importances(model: SklearnRegressor) -> None:
+    feature_importances = model.feature_importances_
+    
+    fig = plt.figure(figsize=(8., 8.))
+    plt.scatter(np.array(range(len(feature_importances))), feature_importances)
+    plt.xlabel(r'Time extent, $\tau$')
+    plt.ylabel('Importance')
+    save_plot(fig=fig, path='plots/', filename='feature_importances')
