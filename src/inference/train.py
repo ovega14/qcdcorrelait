@@ -39,7 +39,7 @@ NTAU = 192  # 192 time extents in our datasets
 
 
 #===================================================================================================
-# MODEL TRAINING
+# MODEL PREPARATION AND TRAINING
 #===================================================================================================
 def make_model(
     args: argparse.Namespace
@@ -101,9 +101,15 @@ def train_model(
     dict_data: dict[str, torch.Tensor], 
     args: argparse.Namespace,
     model: Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]]
-):
+) -> Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]]:
     """
-    Trains the model according to MSE loss with :math:`\ell^2` regularization.
+    Trains the model.
+    
+    For neural networks implemented via PyTorch, training is done according to MSE loss with 
+    :math:`\ell^2` regularization. The training loss curve is saved and plotted.
+
+    For the SkLearn models, training is done natively; however, for the gradient-boosted trees, an
+    ensemble is trained iteratively, yielding a list of models for each euclidean time extent.
 
     Args:
         dict_data: Dictionary of preprocessed correlator data
@@ -160,6 +166,7 @@ def train_model(
     else:
         if hasattr(model, '__iter__'):  # should only be the gradient-boosted trees
             def fit_gbr(gbr_list: List[SklearnRegressor]) -> List[SklearnRegressor]:
+                """Each gbr is fit to a single time extent in the target correlator."""
                 nonlocal model
                 model: List[SklearnRegressor] = []
                 for tau, gbr in enumerate(gbr_list):
