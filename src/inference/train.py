@@ -161,7 +161,7 @@ def train_model(
         if hasattr(model, '__iter__'):  # should only be the gradient-boosted trees
             def fit_gbr(gbr_list: List[SklearnRegressor]) -> List[SklearnRegressor]:
                 nonlocal model
-                model: List[SklearnRegressor]
+                model: List[SklearnRegressor] = []
                 for tau, gbr in enumerate(gbr_list):
                     gbr.fit(
                         n_corr_2pt_s_train_tensor.numpy(), 
