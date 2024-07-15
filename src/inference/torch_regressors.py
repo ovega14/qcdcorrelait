@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 
 class MLP(torch.nn.Module):
@@ -170,4 +170,60 @@ class LinearModel(torch.nn.Module):
         for i in range(self.depth):
             temp = self.layers[i](temp)
         x = temp
+        return x
+    
+
+class Transformer(torch.nn.Module):
+    """
+    Basic transformer model.
+
+    Args:
+        input_dim: Number of features in the input data
+        num_heads: Number of heads to use for multihead attention
+        dim_feedforward: Dimension of the feedforward in transformer encoder layers
+        batch_first: Whether batch dimension is first in data
+        activation: Activation function to use in transformer encoder layers
+    
+    Attributes:
+        depth: Number of transformer encoder layers
+        layers: ModuleList of transformer encoder layers
+    """
+    def __init__(
+        self,
+        input_dim: int,
+        num_heads: int = 4,
+        dim_feedforward: Union[bool, int] = None,
+        batch_first: Optional[bool] = True,
+        activation: Optional[str] = 'gelu'
+    ):
+        super().__init__()
+
+        if dim_feedforward is None:
+            dim_feedforward: int = 4 * input_dim
+        
+        self.depth = 2
+        
+        self.layers = torch.nn.ModueList([])
+        for _ in range(self.depth):
+            self.layers.append(
+                torch.nn.TransformerEncoderLayer(
+                    d_model = input_dim,
+                    nhead = num_heads,
+                    dim_feedforward = dim_feedforward,
+                    batch_first = batch_first,
+                    activation = activation
+                )
+            )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Feeds data through the network using residual connections."""
+        x = torch.unsqueeze(x, -1)
+
+        temp = x
+        for i in range(self.depth):
+            temp = self.layers[i](temp)
+            temp = F.elu(temp)
+        x = temp + x
+
+        x = torch.squeeze(x, -1)
         return x
