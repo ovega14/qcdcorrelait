@@ -7,7 +7,7 @@ import numpy.typing as npt
 import matplotlib
 import matplotlib.pyplot as plt
 
-from ..plotting import save_plot
+from ..utils import save_plot
 
 
 #===================================================================================================

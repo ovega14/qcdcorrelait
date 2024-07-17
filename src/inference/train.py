@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from torch_regressors import *
 from utils import adjust_learning_rate
-from .. plotting import save_plot
+from ..utils import save_plot
 
 from typing import TypeVar, Union, List
 

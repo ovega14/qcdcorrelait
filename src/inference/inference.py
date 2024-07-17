@@ -4,7 +4,7 @@ import argparse
 import copy
 import matplotlib.pyplot as plt
 
-from .. plotting import save_plot
+from ..utils import save_plot
 
 from typing import TypeVar, Union, List
 
