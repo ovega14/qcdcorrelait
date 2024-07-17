@@ -3,6 +3,7 @@ import gvar as gv
 
 def make_prior(
     filename: str,
+    *,
     ne: int,
     no: int
 ) -> dict[str, gv.Gvar]:
@@ -19,6 +20,7 @@ def make_prior(
     Returns:
         Dictionary of fit parameters and their corresponding priors as Gvar objects.
     """
+    # TODO: fix numbers of states for other mass combinations
     prior = gv.BufferDict()
 
     prior[filename + ':a'] = gv.gvar(ne*['0.0(0.5)'])
