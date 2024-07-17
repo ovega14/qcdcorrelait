@@ -374,3 +374,20 @@ def convert_to_gvars(
         else:
             corr_dict[name] = corr.transpose() # (n_cf, n_tau)
     return gv.dataset.avg_data(corr_dict)
+
+
+def tensor_to_avg_over_tsrc(
+    tensor: torch.Tensor, 
+    n_tau: int, 
+    n_configs: int
+) -> npt.Array:
+    """
+    Converts a torch.Tensor into a numpy array and averages over the source times axis.
+    Args:
+        tensor: A PyTorch tensor of shape [num_cfgs * len(ind_list), num_tau]
+        
+    Returns:
+        A 1d numpy array of shape [num_tau] that has been averaged over source times
+    """
+    temp = tensor.T.reshape((n_tau, n_configs, -1)).numpy()
+    return np.average(temp, axis=-1)
