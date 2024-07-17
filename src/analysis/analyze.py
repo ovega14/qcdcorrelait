@@ -1,6 +1,7 @@
 import numpy as np
 import gvar as gv
 import numpy.typing as npt
+from typing import List, Any
 
 from .plot import *
 from ..inference.ratio_method import ratio_method
@@ -151,20 +152,36 @@ def analysis_pred(
 
     # WRITE RESULTS --------------------------------------------------------------------------------
     dict_orig_corrs = dict()
-    print("corr_o_truth.shape", corr_o_truth.shape)
     corrs = [corr_o_truth, corr_o_pred_corrected, corr_o_pred_uncorrected]
-    # for (ix, corr) in enumerate(corrs):
-    #     corrs[ix] = np.average(corr, axis=-1)
     names = ["corr_o_truth", "corr_o_pred_corrected", "corr_o_pred_uncorrected"]
     for name, corr in zip(names, corrs):
         dict_orig_corrs[name] = corr
 
     dict_opts = dict()
-    opt_keys = ['filename', 'tp', 'tmin', 'tmax', 'ne', 'no', 'maxit', 'averages_tsrc']
-    opt_vals = [args.input_dataname + '_' + args.output_dataname, num_tau, 2, num_tau-2, 5, 5, 5_000, False]
+    opt_keys: List[str] = [
+        'filename', 
+        'tp', 
+        'tmin', 
+        'tmax', 
+        'ne', 
+        'no', 
+        'maxit', 
+        'averages_tsrc'
+    ]
+    opt_vals: List[Any] = [
+        args.input_dataname + '_' + args.output_dataname, 
+        num_tau, 
+        2, 
+        num_tau-2, 
+        5, 
+        5, 
+        5_000, 
+        False
+    ]
     for key, val in zip(opt_keys, opt_vals):
         dict_opts[key] = val
-    l = dict_opts.get('l')
+    
+    filename = dict_opts.get('filename')
     dict_fits = fit_corrs(dict_orig_corrs, dict_opts)
 
     # Save fits for later aggregate analysis
@@ -180,8 +197,8 @@ def analysis_pred(
             fit = dict_fits[tag]
             print(tag + ':\n', file=f)
 
-            a = fit.p[l + ':a']
-            dE = fit.p[l + ':dE']
+            a = fit.p[filename + ':a']
+            dE = fit.p[filename + ':dE']
             chi2_dof = fit.chi2 / fit.dof
             Q = fit.Q
 
@@ -213,8 +230,8 @@ def analysis_pred(
                 fit = dict_fits[tag]
                 print(tag + ':\n', file=f)
 
-                a = fit.p[l + ':a']
-                dE = fit.p[l + ':dE']
+                a = fit.p[filename + ':a']
+                dE = fit.p[filename + ':dE']
                 chi2_dof = fit.chi2 / fit.dof
                 Q = fit.Q
 
@@ -249,8 +266,8 @@ def analysis_pred(
                 fit = dict_fits[tag]
                 print(tag + ':\n', file=f)
 
-                a = fit.p[l + ':a']
-                dE = fit.p[l + ':dE']
+                a = fit.p[filename + ':a']
+                dE = fit.p[filename + ':dE']
                 chi2_dof = fit.chi2 / fit.dof
                 Q = fit.Q
 
@@ -261,7 +278,6 @@ def analysis_pred(
                 print(string, file=f)
                 print('=' * 120, file=f)
         # Add dict entry for ratio method + ML
-        #total_dict_fits.update(dict_fits)
         total_dict_fits['ml_ratio_method_pred'] = dict_fits['hp_o_pred']
         total_dict_fits['ml_ratio_method_pred_modified'] = dict_fits['hp_o_pred_modified']
     output_filename = f'../../aggregate_results/{args.reg_method}.p'

@@ -383,6 +383,7 @@ def tensor_to_avg_over_tsrc(
 ) -> npt.Array:
     """
     Converts a torch.Tensor into a numpy array and averages over the source times axis.
+    
     Args:
         tensor: A PyTorch tensor of shape [num_cfgs * len(ind_list), num_tau]
         
