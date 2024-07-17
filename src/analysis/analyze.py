@@ -2,7 +2,7 @@ import numpy as np
 import gvar as gv
 import numpy.typing as npt
 
-from .plot import plot_correlators, plot_relative_correlated_difference, plot_noise_to_signal, plot_normalized_noise_to_signal, plot_error_breakdown
+from .plot import *
 from ..inference.ratio_method import ratio_method
 from ..processing.preprocessing import tensor_to_avg_over_tsrc
 from ..fitting.fit import fit_corrs
@@ -95,6 +95,7 @@ def analysis_pred(
     corr_o_pred_corrected = n_corr_o_corrected * corr_o_train_stds[:, None] + corr_o_train_means[:, None]
     corr_o_pred_uncorrected = n_corr_o_uncorrected * corr_o_train_stds[:, np.newaxis] + corr_o_train_means[:, np.newaxis]
     corr_o_bias_correction = n_bias_correction_vs_tau * corr_o_train_stds[:, np.newaxis] + corr_o_train_means[:, np.newaxis]
+    
     corr_o_truth = np.average(corr_o, axis=-1)
     corr_o_train_truth = np.average(corr_o[:, :, args.train_ind_list], axis=-1)
     corr_o_labeled_truth = np.average(corr_o[:, :, args.train_ind_list + args.bc_ind_list], axis=-1)
