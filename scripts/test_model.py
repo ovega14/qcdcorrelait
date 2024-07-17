@@ -8,8 +8,10 @@ import copy
 import sys
 sys.path.insert(0, '../src/')
 from utils import save_model, save_results, set_np_seed
-from processing.preprocessing import preprocess_data
-
+from processing.preprocessing import get_corrs, preprocess_data
+from inference.train import train_model
+from inference.inference import predict
+from analysis.analyze import analysis_pred
 
 def main(args):
     ### INITIALIZATION -----------------------------------------------------------------------------
@@ -59,7 +61,7 @@ def main(args):
     save_model(model=model)
 
     n_corr_i_train_tensor = (dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
-    dict_results = inference(
+    dict_results = predict(
         n_corr_i_train_tensor=n_corr_i_train_tensor,
         model=model,
         args=args,
