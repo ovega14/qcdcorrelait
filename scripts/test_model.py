@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import torch
 import numpy as np
 
@@ -12,6 +13,7 @@ from processing.preprocessing import get_corrs, preprocess_data
 from inference.train import train_model
 from inference.inference import predict
 from analysis.analyze import analysis_pred
+
 
 def main(args):
     ### INITIALIZATION -----------------------------------------------------------------------------
