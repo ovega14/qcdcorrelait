@@ -7,7 +7,9 @@ import numpy.typing as npt
 import matplotlib
 import matplotlib.pyplot as plt
 
-from ..utils import save_plot
+import sys
+sys.path.insert(0, '../')
+from utils import save_plot
 
 
 #===================================================================================================

@@ -44,22 +44,23 @@ do
             exit
         fi
     fi
-    mkdir -p results/$name
-    cp *.py results/$name/
-    cp *.sh results/$name/
+    mkdir -p ../results/$name
+    #cp *.py results/$name/
+    #cp *.sh results/$name/
     # cp -r record results/$name/
-    cd results/$name
-    mkdir data
-    mkdir plots
-    mkdir model
-    mkdir results
-		python -W ignore ml_qcd.py \
+    #cd ../results/$name
+    mkdir ../results/$name/data
+    mkdir ../results/$name/plots
+    mkdir ../results/$name/model
+    mkdir ../results/$name/results
+		python -W ignore test_model.py \
         --seed $seed \
         --use_torch $use_torch \
         --input_dataname $input_dataname \
         --output_dataname $output_dataname \
         --reg_method $reg_method \
         --dict_hyperparams $dict_hyperparams \
-        --rel_eps $rel_eps
-    cd ../../
+        --rel_eps $rel_eps \
+        --results_dir "../results/$name"
+    #cd ../../
 done

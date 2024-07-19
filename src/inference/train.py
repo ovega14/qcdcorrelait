@@ -9,9 +9,11 @@ import argparse
 import json
 import matplotlib.pyplot as plt
 
-from torch_regressors import *
-from utils import adjust_learning_rate
-from ..utils import save_plot
+from .torch_regressors import *
+from .utils import adjust_learning_rate
+import sys
+sys.path.insert(0, '../')
+from utils import save_plot
 
 from typing import TypeVar, Union, List
 
@@ -168,7 +170,7 @@ def train_model(
             def fit_gbr(gbr_list: List[SklearnRegressor]) -> List[SklearnRegressor]:
                 """Each gbr is fit to a single time extent in the target correlator."""
                 nonlocal model
-                model: List[SklearnRegressor] = []
+                model = []
                 for tau, gbr in enumerate(gbr_list):
                     gbr.fit(
                         n_corr_2pt_s_train_tensor.numpy(), 

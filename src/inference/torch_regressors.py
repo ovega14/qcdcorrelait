@@ -1,7 +1,8 @@
 import torch
 import torch.nn.functional as F
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, TypeVar
+TorchFunctional = TypeVar('TorchFunctional')
 
 
 class MLP(torch.nn.Module):
@@ -27,7 +28,7 @@ class MLP(torch.nn.Module):
         output_dim: int,
         hidden_dims: List[int],
         batch_norm: Optional[bool] = False,
-        activation: Optional[torch.nn.Functional] = F.elu
+        activation: Optional[TorchFunctional] = F.elu
     ):
         super().__init__()
 
@@ -87,7 +88,7 @@ class CNN(torch.nn.Module):
         hidden_channels: List[int],
         kernel_size: int,
         batch_norm: Optional[bool] = False,
-        activation: Optional[torch.nn.Functional] = F.elu
+        activation: Optional[TorchFunctional] = F.elu
     ):
         super().__init__()
 

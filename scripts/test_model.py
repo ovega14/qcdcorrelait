@@ -60,7 +60,7 @@ def main(args):
         args,
     )
 
-    save_model(model=model)
+    save_model(model=model, path=args.results_dir+'/model')
 
     n_corr_i_train_tensor = (dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
     dict_results = predict(
@@ -71,7 +71,7 @@ def main(args):
     )
 
     if args.save_results == 1:
-        save_results(dict_results=dict_results)
+        save_results(dict_results=dict_results, path=args.results_dir+'/results')
 
     dict_data["n_corr_o_train_tensor"] = (dict_data["corr_o_train_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
 
@@ -109,6 +109,7 @@ if __name__ == '__main__':
     add('--dict_hyperparams', type=str, default='{"lr": 0.01, "l2_coeff": 1e-2, "training_steps": 500}')
     add('--rel_eps', type=float, default=1e-2)
     add('--modify_ratio', type=int, default=1)
+    add('--results_dir', type=str)
 
     args = parser.parse_args()
 

@@ -8,7 +8,7 @@ from typing import Tuple
 #===================================================================================================
 # ARRAY / TENSOR OPERATIONS
 #===================================================================================================
-def tensor_means_stds_by_axis0(tensor: torch.Tensor) -> Tuple[npt.Array, npt.Array]:
+def tensor_means_stds_by_axis0(tensor: torch.Tensor) -> Tuple[npt.NDArray, npt.NDArray]:
     """
     Compute the means and standard deviations of a 2d torch tensor by `axis=0`.
 

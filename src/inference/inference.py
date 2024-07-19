@@ -4,7 +4,9 @@ import argparse
 import copy
 import matplotlib.pyplot as plt
 
-from ..utils import save_plot
+import sys
+sys.path.insert(0, '../')
+from utils import save_plot
 
 from typing import TypeVar, Union, List
 

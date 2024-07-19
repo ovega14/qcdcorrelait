@@ -4,9 +4,10 @@ import gvar as gv
 import torch
 
 import numpy.typing as npt
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, TypeVar
+GVDataset = TypeVar('GVDataset')
 
-from utils import tensor_means_stds_by_axis0
+from .utils import tensor_means_stds_by_axis0
 
 
 """Utilities for processing correlator data."""
@@ -43,7 +44,7 @@ def preprocess_data(
     train_ind_list: List[int],
     bc_ind_list: List[int],
     unlab_ind_list: List[int]
-) -> dict[str, np.NDArray]:
+) -> dict[str, npt.NDArray]:
     """
     Preprocesses the correlator dataset into a dictionary of input/output data, means, and stdevs.
 
@@ -93,7 +94,7 @@ def preprocess_data(
 #===================================================================================================
 # DATA NORMALIZATION
 #===================================================================================================
-def normalize_3d(corr: npt.NDArray) -> Tuple[npt.Array, npt.NDArray]:
+def normalize_3d(corr: npt.NDArray) -> Tuple[npt.NDArray, npt.NDArray]:
     """
     Divide correlator samples by their average over conf, tsrc for a 3d numpy.NDArray correlator.
 
@@ -113,7 +114,7 @@ def normalize_3d(corr: npt.NDArray) -> Tuple[npt.Array, npt.NDArray]:
     return normalized_corr, normalzation_factors
 
 
-def normalize_2d(corr: npt.NDArray) -> Tuple[npt.Array, npt.NDArray]:
+def normalize_2d(corr: npt.NDArray) -> Tuple[npt.NDArray, npt.NDArray]:
     """
     Divide correlator samples by their average over the dimensions other than t.
     for a 2d numpy.array correlator
@@ -136,7 +137,7 @@ def normalize_2d(corr: npt.NDArray) -> Tuple[npt.Array, npt.NDArray]:
     return normalized_corr, normalzation_factors
 
 
-def normalize_1d(corr: npt.Array) -> Tuple[npt.Array, npt.NDArray]:
+def normalize_1d(corr: npt.NDArray) -> Tuple[npt.NDArray, npt.NDArray]:
     """
     Normalize a 1d correlator.
 
@@ -352,7 +353,7 @@ def tensor_data_to_np_data_3d(
 def convert_to_gvars(
     dict_orig_corrs: dict[str, npt.NDArray], 
     averages_tsrc: Optional[bool] = False
-) -> gv.Dataset:
+) -> GVDataset:
     """
     Converts correlators in the form [Nt, nconf, Ntsrc] to a gvar dataset.
 
@@ -373,14 +374,14 @@ def convert_to_gvars(
             corr_dict[name] = np.average(corr, axis=-1).transpose() # (n_cf, n_tau)
         else:
             corr_dict[name] = corr.transpose() # (n_cf, n_tau)
-    return gv.dataset.avg_data(corr_dict)
+    return GVDataset.avg_data(corr_dict)
 
 
 def tensor_to_avg_over_tsrc(
     tensor: torch.Tensor, 
     n_tau: int, 
     n_configs: int
-) -> npt.Array:
+) -> npt.NDArray:
     """
     Converts a torch.Tensor into a numpy array and averages over the source times axis.
     

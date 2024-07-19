@@ -25,19 +25,22 @@ def set_np_seed(seed: int) -> None:
 #===================================================================================================
 # SAVE DATA
 #===================================================================================================
-def save_model(model: Regressor) -> None:
+def save_model(
+    model: Regressor,
+    path: str
+) -> None:
     """
     Saves the learned parameters of a trained regression model.
     
     Args: 
         model: A trained Regressor object, either from PyTorch or Sklearn
     """
-    pickle.dump(model, open('./model/model.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(model, open(f'{path}', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def save_results(
     dict_results: dict[str, npt.NDArray], 
-    path: str = './results/results'
+    path: str
 ) -> None:
     """
     Saves the results of the fit on correlator data.
