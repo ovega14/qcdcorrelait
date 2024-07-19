@@ -83,6 +83,7 @@ class RatioMethod:
         """
         Computes the predicted output correlator using the ratio method estimator.
         """
+        self._truncate_alpha()
         ratio = self.fit()
         self.gv_dataset['hp_o_pred'] = self.gv_dataset['lp_o'] * ratio
         if self.boosted:
