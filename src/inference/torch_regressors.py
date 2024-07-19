@@ -102,14 +102,16 @@ class CNN(torch.nn.Module):
                         )]
         for i in range(1, self.depth - 1):
             conv_layers.append(torch.nn.Conv1d(
-                                    in_channels=hidden_channels[i-1],
-                                    out_channels=hidden_channels[i],
-                                    kernel_size=kernel_size
+                                    in_channels = hidden_channels[i-1],
+                                    out_channels = hidden_channels[i],
+                                    kernel_size = kernel_size,
+                                    padding = 'same'
                                 ))
         conv_layers.append(torch.nn.Conv1d(
-                                in_channels=hidden_channels[-1], 
-                                out_channels=out_channels,
-                                kernel_size=kernel_size
+                                in_channels = hidden_channels[-1], 
+                                out_channels = out_channels,
+                                kernel_size = kernel_size,
+                                padding = 'same'
                             ))
         self.conv_layers = torch.nn.ModuleList(conv_layers)
         
