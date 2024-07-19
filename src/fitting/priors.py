@@ -30,6 +30,8 @@ def make_prior(
         prior[filename + ':dE'] = gv.gvar(['0.400(5)', '0.20(5)', '0.28(5)', '0.6(2)', '1.0(2)'][:ne])
         prior[filename + ':dEo'] = gv.gvar(['0.25(5)', '0.25(5)', '0.10(10)', '0.10(10)', '0.20(10)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.050(5)')
+        if ne >= 5:
+            prior[filename +':a'][4] = gv.gvar('0.5(5)')
     
     elif filename.endswith('P5-P5_RW_RW_d_d_m0.1827_m0.01555_p000'):
         prior[filename + ':dE'] = gv.gvar(['0.40(5)', '0.20(5)', '0.20(10)'])
