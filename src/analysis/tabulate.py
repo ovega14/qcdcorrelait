@@ -15,6 +15,7 @@ class Table:
         dict_fits: dict[str, Fitter],
         filename: str,
         tag: str,
+        outfile: str,
         num_states: Optional[int] = 2
     ) -> None:
         """
@@ -29,10 +30,11 @@ class Table:
             dict_fits: Dictionary of `corfitter.CorrFitter` objects that have been fit to data
             filename: Name of the specific file inside the fitters to examine
             tag: Keyword for which regime to tabulate, e.g. `corr_o_pred_corrected`
+            outfile: Name of the file in which to print the text
             num_states: Number of fit parameters to display, starting with the ground state
         """
         fit = dict_fits[tag]
-        print(tag + ':\n')
+        print(tag + ':\n', file=outfile)
 
         a = fit.p[filename + ':a']
         dE = fit.p[filename + ':dE']
@@ -43,5 +45,4 @@ class Table:
         for i in range(num_states):
             string += f'{a[i]} & {dE[i]} & '
         string += f'{round(chi2_dof, 4)} & {round(Q, 4)} \\\\'
-        print(string)
-        print('=' * 120)
+        print(string, file=outfile)

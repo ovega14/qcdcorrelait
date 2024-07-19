@@ -4,6 +4,7 @@ import numpy.typing as npt
 from typing import List, Any
 
 from .plot import *
+from .tabulate import Table
 sys.path.insert(0, '../')
 from inference.ratio_method import ratio_method
 from processing.preprocessing import tensor_to_avg_over_tsrc
@@ -192,19 +193,7 @@ def analysis_pred(
             print(dict_fits[tag], file=f)
     with open(f'{args.results_dir}/results/latex_table.txt', 'w') as f:
         for tag in dict_fits.keys():
-            fit = dict_fits[tag]
-            print(tag + ':\n', file=f)
-
-            a = fit.p[filename + ':a']
-            dE = fit.p[filename + ':dE']
-            chi2_dof = fit.chi2 / fit.dof
-            Q = fit.Q
-
-            string = f'{args.reg_method} & '
-            for i in range(2):
-                string += f'{a[i]} & {dE[i]} & '
-            string += f'{round(chi2_dof, 4)} & {round(Q, 4)} \\\\'
-            print(string, file=f)
+            Table.print_param_line(args.reg_method, dict_fits, filename, tag, f)
             print('=' * 120, file=f)
 
     if args.compare_ratio_method == 1:
@@ -225,19 +214,12 @@ def analysis_pred(
                 print(dict_fits[tag], file=f)
         with open(f'{args.results_dir}/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
-                fit = dict_fits[tag]
-                print(tag + ':\n', file=f)
-
-                a = fit.p[filename + ':a']
-                dE = fit.p[filename + ':dE']
-                chi2_dof = fit.chi2 / fit.dof
-                Q = fit.Q
-
-                string = 'Reg Method & '
-                for i in range(2):
-                    string += f'{a[i]} & {dE[i]} & '
-                string += f'{round(chi2_dof, 4)} & {round(Q, 4)}' +' \\\\'
-                print(string, file=f)
+                if tag == 'hp_o_pred':
+                    Table.print_param_line('RM', dict_fits, filename, tag, f)
+                elif tag == 'hp_o_pred_modified':
+                    Table.print_param_line('bRM', dict_fits, filename, tag, f)
+                else:
+                    Table.print_param_line(args.reg_method, dict_fits, filename, tag, f)
                 print('=' * 120, file=f)
     
     if args.compare_ml_ratio_method == 1:
@@ -258,17 +240,10 @@ def analysis_pred(
                 print(dict_fits[tag], file=f)
         with open(f'{args.results_dir}/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
-                fit = dict_fits[tag]
-                print(tag + ':\n', file=f)
-
-                a = fit.p[filename + ':a']
-                dE = fit.p[filename + ':dE']
-                chi2_dof = fit.chi2 / fit.dof
-                Q = fit.Q
-
-                string = 'Reg Method & '
-                for i in range(2):
-                    string += f'{a[i]} & {dE[i]} & '
-                string += f'{round(chi2_dof, 4)} & {round(Q, 4)}' +' \\\\'
-                print(string, file=f)
+                if tag == 'hp_o_pred':
+                    Table.print_param_line('RM + ML', dict_fits, filename, tag, f)
+                elif tag == 'hp_o_pred_modified':
+                    Table.print_param_line('bRM + ML', dict_fits, filename, tag, f)
+                else:
+                    Table.print_param_line(args.reg_method, dict_fits, filename, tag, f)
                 print('=' * 120, file=f)
