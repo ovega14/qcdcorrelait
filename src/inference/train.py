@@ -61,12 +61,12 @@ def make_model(
 
     global NTAU
 
-    if isinstance(TORCH_REGRESSORS[reg_method], torch.nn.Module):
+    if reg_method in TORCH_REGRESSORS.keys():
         assert use_torch, 'Torch regressor supplied but not using torch.'
         print(f'Using {reg_method} for regression.')
 
         if reg_method == 'MLP':
-            model = MLP(NTAU, NTAU, hiddden_dims=[NTAU // 4], batch_norm = True)
+            model = MLP(NTAU, NTAU, hidden_dims=[NTAU // 4], batch_norm = True)
         elif reg_method == 'Linear':
             model = LinearModel(NTAU, NTAU)
         elif reg_method == 'CNN':
@@ -75,7 +75,7 @@ def make_model(
             model = Transformer(input_dim=1, num_heads=1)
         else:
             raise NotImplementedError(f'Unknown Torch regression method {reg_method}.')
-    else:
+    elif reg_method in SKLEARN_REGRESSORS.keys():
         print(f'Using {reg_method} for regression.')
 
         if reg_method == 'Linear':
@@ -95,7 +95,9 @@ def make_model(
                 gbr_list.append(gbr)
             return gbr_list
         else:
-            raise NotImplementedError(f'Unknown regression method {reg_method}.')
+            raise NotImplementedError(f'Unknown Sklearn regression method {reg_method}.')
+    else:
+        raise NotImplementedError(f'{reg_method} not a known PyTorch or Sklearn regressor.')
     return model
         
     

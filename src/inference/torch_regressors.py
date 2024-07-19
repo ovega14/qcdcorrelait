@@ -48,7 +48,7 @@ class MLP(torch.nn.Module):
             bn_layers.append(torch.nn.BatchNorm1d(output_dim))
         else:
             bn_layers = [torch.nn.Identity()] * self.depth
-        bn_layers = torch.nn.ModuleList(bn_layers)
+        self.bn_layers = torch.nn.ModuleList(bn_layers)
 
         self.activation = activation
 

@@ -2,11 +2,13 @@ import corrfitter as cf
 
 import numpy.typing as npt
 from typing import Any, Optional, List, TypeVar
-
 Fitter = TypeVar('Fitter')
+GVDataset = TypeVar('GVDataset')
 
-from ..processing.preprocessing import convert_to_gvars
 from .priors import make_prior
+import sys
+sys.path.insert(0, '../')
+from processing.preprocessing import convert_to_gvars
 
 
 #===================================================================================================
@@ -41,7 +43,7 @@ def corr2_opts(
         'tfit': tfit,
         'a': (filename + ':a', filename + ':ao'),
         'b': (filename + ':a', filename + ':ao'),
-        'dE': (filename + ':dE', filename + 'dEo'),
+        'dE': (filename + ':dE', filename + ':dEo'),
         's': (1., -1.)
     }
     return opts
@@ -53,6 +55,7 @@ def corr2_opts(
 def fit_corrs(
     dict_corrs: dict[str, npt.NDArray],
     dict_opts: dict[str, Any],
+    gv_ds: GVDataset = None,
     excluding_tags: Optional[List[str]] = []
 ) -> dict[str, Fitter]:
     """
@@ -76,16 +79,20 @@ def fit_corrs(
     maxit = dict_opts.get('maxit', 5_000)
     averages_tsrc = dict_opts.get('averages_tsrc', False)
 
-    data = convert_to_gvars(dict_corrs, averages_tsrc=averages_tsrc)
+    if gv_ds == None:
+        data = convert_to_gvars(dict_corrs, averages_tsrc=averages_tsrc)
+    else:
+        data = gv_ds
 
     dict_fits = dict()
     for tag in data.keys():
         if tag not in excluding_tags:
+            print('tag:', tag)
             model = cf.Corr2(**corr2_opts(tag=tag, filename=filename, tp=tp, tmin=tmin, tmax=tmax))
             prior = make_prior(filename, ne=ne, no=no)
             fitter = cf.CorrFitter(models=[model])
             fit = fitter.lsqfit(data=data, prior=prior, maxit=maxit)
             dict_fits[tag] = fit
             print(fit)
-            print('=' * 120)
+            print('=' * 130)
     return dict_fits

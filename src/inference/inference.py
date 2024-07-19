@@ -36,15 +36,15 @@ def predict(
         Dictionary of predicted correlator data.
     """
     corr_i_unlab_tensor = dict_data["corr_i_unlab_tensor"]
-    n_corr_i_unlab_tensor = (corr_i_unlab_tensor - corr_i_train_means) / corr_i_train_stds
-    
-    corr_i_bc_tensor = dict_data["corr_i_bc_tensor"]
-    n_corr_i_bc_tensor = (corr_i_bc_tensor - corr_i_train_means) / corr_i_train_stds
-
     corr_i_train_means = dict_data["corr_i_train_means"]
     corr_o_train_means = dict_data["corr_o_train_means"]
     corr_i_train_stds = dict_data["corr_i_train_stds"]
     corr_o_train_stds = dict_data["corr_o_train_stds"]
+    
+    n_corr_i_unlab_tensor = (corr_i_unlab_tensor - corr_i_train_means) / corr_i_train_stds
+    
+    corr_i_bc_tensor = dict_data["corr_i_bc_tensor"]
+    n_corr_i_bc_tensor = (corr_i_bc_tensor - corr_i_train_means) / corr_i_train_stds
     
     use_torch: bool = args.use_torch
     reg_method = args.reg_method

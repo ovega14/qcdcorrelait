@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, '../src/')
 from utils import save_model, save_results, set_np_seed
 from processing.preprocessing import get_corrs, preprocess_data
-from inference.train import train_model
+from inference.train import make_model, train_model
 from inference.inference import predict
 from analysis.analyze import analysis_pred
 
@@ -33,7 +33,7 @@ def main(args):
 
     corr_i, corr_o = get_corrs(
         args.hdf5_filename,
-        *[args.input_dataname, args.output_dataname]
+        [args.input_dataname, args.output_dataname]
     )
 
     num_tau, num_cfgs, num_tsrc = corr_i.shape
@@ -55,10 +55,8 @@ def main(args):
         corr_i, corr_o, train_ind_list, bc_ind_list, unlab_ind_list,
     )
 
-    model = train_model(
-        dict_data,
-        args,
-    )
+    model = make_model(args)
+    model = train_model(dict_data, args, model)
 
     save_model(model=model, path=args.results_dir+'/model')
 
@@ -84,13 +82,13 @@ def main(args):
     analysis_pred(
         corr_i, corr_o,
         num_tau, num_cfgs, num_tsrc,
-        args,
         dict_data,
         dict_results,
+        args
     )
+    
+
 # --------------------------------------------------------------------------------------------------
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     add = parser.add_argument
@@ -100,7 +98,7 @@ if __name__ == '__main__':
     add('--compare_ml_ratio_method', type=int, default=1)
     add('--use_torch', type=int, default=1)
     add('--save_results', type=int, default=0)
-    add('--hdf5_filename', type=str, default='../../l64192a_run2_810-6996_1028cfgs.hdf5')
+    add('--hdf5_filename', type=str, default='../data/l64192a_run2_810-6996_1028cfgs.hdf5')
     add('--input_dataname', type=str, default='P5-P5_RW_RW_d_d_m0.164_m0.01555_p000')
     add('--output_dataname', type=str, default='P5-P5_RW_RW_d_d_m0.164_m0.00311_p000')
     add('--train_ind_list', type=str, default='[0]')
@@ -113,7 +111,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    with open('./data/commandline_args.dat', 'w') as f:
+    with open(args.results_dir+'/data/commandline_args.dat', 'w') as f:
         args_dict = copy.deepcopy(args.__dict__)
         args_dict['dict_hyperparams'] = json.loads(args.dict_hyperparams)
         json.dump(args_dict, f, indent=2)

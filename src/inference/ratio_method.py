@@ -1,10 +1,13 @@
 import gvar as gv
 import numpy as np
 import numpy.typing as npt
-from typing import List, Optional
+from typing import List, Optional, TypeVar
+GVDataset = TypeVar('GVDataset')
 import copy
 
-from ..processing.preprocessing import convert_to_gvars
+import sys
+sys.path.insert(0, '../')
+from processing.preprocessing import convert_to_gvars
 
 
 class RatioMethod:
@@ -59,7 +62,7 @@ def ratio_method(
     corr_2pt_i: npt.NDArray, 
     corr_2pt_o: npt.NDArray, 
     lab_ind_list: List[int]
-) -> gv.Dataset:
+) -> GVDataset:
     """Unboosted ratio method"""
     lp_i = corr_2pt_i[:, :, lab_ind_list]
     lp_o = corr_2pt_o[:, :, lab_ind_list]
@@ -73,7 +76,8 @@ def ratio_method(
     for name, corr in zip(names, corrs):
         dict_orig_corrs[name] = corr
     gv_dataset = convert_to_gvars(dict_orig_corrs, averages_tsrc=False)
-
+    
+    gv_dataset["hp_o_pred"] = (gv_dataset["lp_o"]/gv_dataset["lp_i"])*gv_dataset["hp_i"]
     return gv_dataset
 
 
@@ -83,7 +87,7 @@ def boosted_ratio_method(
     lab_ind_list: List[int],
     alpha: Optional[float] = None,
     numerical_truncation: Optional[float] = 1e-50
-) -> gv.Dataset:
+) -> GVDataset:
     """Boosted ratio method."""
     lp_i = corr_i[:, :, lab_ind_list]
     lp_o = corr_o[:, :, lab_ind_list]

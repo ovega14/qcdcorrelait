@@ -374,7 +374,7 @@ def convert_to_gvars(
             corr_dict[name] = np.average(corr, axis=-1).transpose() # (n_cf, n_tau)
         else:
             corr_dict[name] = corr.transpose() # (n_cf, n_tau)
-    return GVDataset.avg_data(corr_dict)
+    return gv.dataset.avg_data(corr_dict)
 
 
 def tensor_to_avg_over_tsrc(

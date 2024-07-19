@@ -4,9 +4,10 @@ import numpy.typing as npt
 from typing import List, Any
 
 from .plot import *
-from ..inference.ratio_method import ratio_method
-from ..processing.preprocessing import tensor_to_avg_over_tsrc
-from ..fitting.fit import fit_corrs
+sys.path.insert(0, '../')
+from inference.ratio_method import ratio_method
+from processing.preprocessing import tensor_to_avg_over_tsrc
+from fitting.fit import fit_corrs
 
 
 def analysis_pred(
@@ -17,7 +18,7 @@ def analysis_pred(
     num_tsrc: int,
     dict_data: dict[str, npt.NDArray],
     dict_results: dict[str, npt.NDArray],
-    *args,
+    args,
 ) -> None:
     """
     Performs the full analysis of the predicted correlator data, including plots and tables.
@@ -46,10 +47,9 @@ def analysis_pred(
     # Get ratio method data
     if args.compare_ratio_method == 1:
         ds_ratio_method = ratio_method(
-            corr_i=corr_i,
-            corr_o=corr_o,
-            lab_ind_list=args.train_ind_list+args.bc_ind_list,
-            modify=args.modify_ratio,
+            corr_2pt_i = corr_i,
+            corr_2pt_o = corr_o,
+            lab_ind_list = args.train_ind_list+args.bc_ind_list
         )
 
     if args.compare_ml_ratio_method == 1:
@@ -76,10 +76,9 @@ def analysis_pred(
         print("corr_o_pred.shape:", corr_o_pred.shape, )
         print("corr_o.shape:", corr_o.shape, )
         ds_ml_ratio_method = ratio_method(
-            corr_i = corr_o_pred,
-            corr_o = corr_o,
-            lab_ind_list = args.train_ind_list + args.bc_ind_list,
-            modify = args.modify_ratio,
+            corr_2pt_i = corr_o_pred,
+            corr_2pt_o = corr_o,
+            lab_ind_list = args.train_ind_list + args.bc_ind_list
         )
 
     # POST-PROCESS DATA ----------------------------------------------------------------------------
@@ -110,14 +109,15 @@ def analysis_pred(
         corr_o_pred_uncorrected = corr_o_pred_uncorrected,
         ds_ratio_method = ds_ratio_method,
         ds_ml_ratio_method = ds_ml_ratio_method,
-        *args
+        args = args
     )
 
     plot_relative_correlated_difference(
         n_corr_o_unlab_vs_tau, 
         n_corr_o_unlab_pred_vs_tau,
         n_corr_o_bc_vs_tau,
-        n_corr_o_bc_pred_vs_tau
+        n_corr_o_bc_pred_vs_tau,
+        args
     )
 
     plot_noise_to_signal(
@@ -128,7 +128,7 @@ def analysis_pred(
         corr_o_pred_uncorrected = corr_o_pred_uncorrected,
         ds_ratio_method = ds_ratio_method,
         ds_ml_ratio_method = ds_ml_ratio_method,
-        *args
+        args = args
     )
 
     plot_normalized_noise_to_signal(
@@ -139,14 +139,15 @@ def analysis_pred(
         corr_o_pred_uncorrected = corr_o_pred_uncorrected,
         ds_ratio_method = ds_ratio_method,
         ds_ml_ratio_method = ds_ml_ratio_method,
-        *args
+        args = args
     )
 
     plot_error_breakdown(
         pred_corrected=corr_o_pred_corrected,
         pred_uncorrected=corr_o_pred_uncorrected,
         bias_correction=corr_o_bias_correction,
-        fig_name='./plots/error_breakdown',
+        args = args,
+        fig_name='error_breakdown',
         truth=corr_o_truth,
     )
 
@@ -188,11 +189,11 @@ def analysis_pred(
     total_dict_fits = dict_fits
 
     # Write results
-    with open('./results/fits.txt', 'w') as f:
+    with open(f'{args.results_dir}/results/fits.txt', 'w') as f:
         for tag in dict_fits.keys():
             print(tag, file=f)
             print(dict_fits[tag], file=f)
-    with open('./results/latex_table.txt', 'w') as f:
+    with open(f'{args.results_dir}/results/latex_table.txt', 'w') as f:
         for tag in dict_fits.keys():
             fit = dict_fits[tag]
             print(tag + ':\n', file=f)
@@ -211,12 +212,12 @@ def analysis_pred(
 
     if args.compare_ratio_method == 1:
         dict_fits = fit_corrs(
-            dict_corrs=None,
-            dict_opts=dict_opts,
-            gv_ds=ds_ratio_method,
+            dict_corrs = None,
+            dict_opts = dict_opts,
+            gv_ds = ds_ratio_method,
             excluding_tags=['hp_i', 'lp_i']
         )
-        with open('./results/fits.txt', 'a') as f:
+        with open(f'{args.results_dir}/results/fits.txt', 'a') as f:
             for tag in dict_fits.keys():
                 if tag == 'hp_o_pred':
                     print("ratio_method_pred", file=f)
@@ -225,7 +226,7 @@ def analysis_pred(
                 else:
                     print(tag, file=f)
                 print(dict_fits[tag], file=f)
-        with open('./results/latex_table.txt', 'a') as f:
+        with open(f'{args.results_dir}/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
                 fit = dict_fits[tag]
                 print(tag + ':\n', file=f)
@@ -247,12 +248,12 @@ def analysis_pred(
 
     if args.compare_ml_ratio_method == 1:
         dict_fits = fit_corrs(
-            dict_corrs=None,
-            dict_opts=dict_opts,
-            gv_ds=ds_ml_ratio_method,
+            dict_corrs = None,
+            dict_opts = dict_opts,
+            gv_ds = ds_ml_ratio_method,
             excluding_tags=['hp_o', 'hp_i', 'lp_i', 'lp_o']
         )
-        with open('./results/fits.txt', 'a') as f:
+        with open(f'{args.results_dir}/results/fits.txt', 'a') as f:
             for tag in dict_fits.keys():
                 if tag == 'hp_o_pred':
                     print("ml_ratio_method_pred", file=f)
@@ -261,7 +262,7 @@ def analysis_pred(
                 else:
                     print(tag, file=f)
                 print(dict_fits[tag], file=f)
-        with open('./results/latex_table.txt', 'a') as f:
+        with open(f'{args.results_dir}/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
                 fit = dict_fits[tag]
                 print(tag + ':\n', file=f)
@@ -280,5 +281,5 @@ def analysis_pred(
         # Add dict entry for ratio method + ML
         total_dict_fits['ml_ratio_method_pred'] = dict_fits['hp_o_pred']
         total_dict_fits['ml_ratio_method_pred_modified'] = dict_fits['hp_o_pred_modified']
-    output_filename = f'../../aggregate_results/{args.reg_method}.p'
-    gv.dump(total_dict_fits, output_filename)
+    #output_filename = f'../../aggregate_results/{args.reg_method}.p'
+    #gv.dump(total_dict_fits, output_filename)

@@ -6,7 +6,7 @@ def make_prior(
     *,
     ne: int,
     no: int
-) -> dict[str, gv.Gvar]:
+) -> dict[str, gv.GVar]:
     """
     Constructs priors for a given file of correlator data to be used in fitting.
 
@@ -24,7 +24,7 @@ def make_prior(
     prior = gv.BufferDict()
 
     prior[filename + ':a'] = gv.gvar(ne*['0.0(0.5)'])
-    prior[filename + ':a0'] = gv.gvar(no*['0.0(0.5)'])
+    prior[filename + ':ao'] = gv.gvar(no*['0.0(0.5)'])
 
     if filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.01555_p000'):
         prior[filename + ':dE'] = gv.gvar(['0.400(5)', '0.20(5)', '0.28(5)', '0.6(2)', '1.0(2)'][:ne])

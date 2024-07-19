@@ -35,7 +35,7 @@ def save_model(
     Args: 
         model: A trained Regressor object, either from PyTorch or Sklearn
     """
-    pickle.dump(model, open(f'{path}', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(model, open(f'{path}/model.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def save_results(
