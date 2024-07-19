@@ -143,15 +143,15 @@ def analysis_pred(
     )
 
     plot_error_breakdown(
-        pred_corrected=corr_o_pred_corrected,
-        pred_uncorrected=corr_o_pred_uncorrected,
-        bias_correction=corr_o_bias_correction,
+        pred_corrected = corr_o_pred_corrected,
+        pred_uncorrected = corr_o_pred_uncorrected,
+        bias_correction = corr_o_bias_correction,
         args = args,
-        fig_name='error_breakdown',
-        truth=corr_o_truth,
+        fig_name = 'error_breakdown',
+        truth = corr_o_truth,
     )
 
-    # WRITE RESULTS --------------------------------------------------------------------------------
+    # FIT CORRELATORS-------------------------------------------------------------------------------
     dict_orig_corrs = dict()
     corrs = [corr_o_truth, corr_o_pred_corrected, corr_o_pred_uncorrected]
     names = ["corr_o_truth", "corr_o_pred_corrected", "corr_o_pred_uncorrected"]
@@ -185,10 +185,7 @@ def analysis_pred(
     filename = dict_opts.get('filename')
     dict_fits = fit_corrs(dict_orig_corrs, dict_opts)
 
-    # Save fits for later aggregate analysis
-    total_dict_fits = dict_fits
-
-    # Write results
+    # WRITE RESULTS---------------------------------------------------------------------------------
     with open(f'{args.results_dir}/results/fits.txt', 'w') as f:
         for tag in dict_fits.keys():
             print(tag, file=f)
@@ -242,10 +239,7 @@ def analysis_pred(
                 string += f'{round(chi2_dof, 2)} & {round(Q, 2)}' +' \\\\'
                 print(string, file=f)
                 print('=' * 120, file=f)
-        # Add dict entry for pure ratio method
-        total_dict_fits['ratio_method_pred'] = dict_fits['hp_o_pred']
-        total_dict_fits['ratio_method_pred_modified'] = dict_fits['hp_o_pred_modified']
-
+    
     if args.compare_ml_ratio_method == 1:
         dict_fits = fit_corrs(
             dict_corrs = None,
@@ -278,8 +272,3 @@ def analysis_pred(
                 string += f'{round(chi2_dof, 2)} & {round(Q, 2)}' +' \\\\'
                 print(string, file=f)
                 print('=' * 120, file=f)
-        # Add dict entry for ratio method + ML
-        total_dict_fits['ml_ratio_method_pred'] = dict_fits['hp_o_pred']
-        total_dict_fits['ml_ratio_method_pred_modified'] = dict_fits['hp_o_pred_modified']
-    #output_filename = f'../../aggregate_results/{args.reg_method}.p'
-    #gv.dump(total_dict_fits, output_filename)
