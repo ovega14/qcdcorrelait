@@ -7,8 +7,8 @@ num=0
 #dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
 rel_eps=1e-2
 # respecify params here !!!
-reg_methods=("LinearModel" "MLP" "CNN" "Transformer")
-reg_method0="Transformer"
+reg_methods=("Linear" "MLP" "CNN" "Transformer")
+reg_method0="Linear"
 
 mi1label=("0.548")
 mi2label=("0.01555")

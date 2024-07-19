@@ -203,7 +203,7 @@ def analysis_pred(
             string = f'{args.reg_method} & '
             for i in range(2):
                 string += f'{a[i]} & {dE[i]} & '
-            string += f'{round(chi2_dof, 2)} & {round(Q, 2)} \\\\'
+            string += f'{round(chi2_dof, 4)} & {round(Q, 4)} \\\\'
             print(string, file=f)
             print('=' * 120, file=f)
 
@@ -236,7 +236,7 @@ def analysis_pred(
                 string = 'Reg Method & '
                 for i in range(2):
                     string += f'{a[i]} & {dE[i]} & '
-                string += f'{round(chi2_dof, 2)} & {round(Q, 2)}' +' \\\\'
+                string += f'{round(chi2_dof, 4)} & {round(Q, 4)}' +' \\\\'
                 print(string, file=f)
                 print('=' * 120, file=f)
     
@@ -269,6 +269,6 @@ def analysis_pred(
                 string = 'Reg Method & '
                 for i in range(2):
                     string += f'{a[i]} & {dE[i]} & '
-                string += f'{round(chi2_dof, 2)} & {round(Q, 2)}' +' \\\\'
+                string += f'{round(chi2_dof, 4)} & {round(Q, 4)}' +' \\\\'
                 print(string, file=f)
                 print('=' * 120, file=f)
