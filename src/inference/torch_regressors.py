@@ -207,7 +207,7 @@ class Transformer(torch.nn.Module):
         
         self.depth = 2
         
-        self.layers = torch.nn.ModueList([])
+        self.layers = torch.nn.ModuleList([])
         for _ in range(self.depth):
             self.layers.append(
                 torch.nn.TransformerEncoderLayer(
