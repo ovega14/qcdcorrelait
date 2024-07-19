@@ -70,7 +70,7 @@ def make_model(
         elif reg_method == 'Linear':
             model = LinearModel(NTAU, NTAU)
         elif reg_method == 'CNN':
-            model = CNN(NTAU, NTAU, hidden_channels=[1], kernel_size=15, batch_norm=False)
+            model = CNN(1, 1, hidden_channels=[1], kernel_size=15, batch_norm=False)
         elif reg_method == 'Transformer':
             model = Transformer(input_dim=1, num_heads=1)
         else:

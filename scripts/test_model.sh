@@ -8,7 +8,7 @@ num=0
 rel_eps=1e-2
 # respecify params here !!!
 reg_methods=("LinearModel" "MLP" "CNN" "Transformer")
-reg_method0="MLP"
+reg_method0="CNN"
 
 mi1label=("0.548")
 mi2label=("0.01555")

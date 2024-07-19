@@ -84,7 +84,7 @@ class CNN(torch.nn.Module):
     def __init__(
         self,
         in_channels: int,
-        out_chanels: int,
+        out_channels: int,
         hidden_channels: List[int],
         kernel_size: int,
         batch_norm: Optional[bool] = False,
@@ -97,18 +97,18 @@ class CNN(torch.nn.Module):
         # Convolutional layers
         conv_layers = [torch.nn.Conv1d(
                             in_channels=in_channels, 
-                            out_chanels=hidden_channels[0],
+                            out_channels=hidden_channels[0],
                             kernel_size=kernel_size
                         )]
         for i in range(1, self.depth - 1):
             conv_layers.append(torch.nn.Conv1d(
                                     in_channels=hidden_channels[i-1],
-                                    out_chanels=hidden_channels[i],
+                                    out_channels=hidden_channels[i],
                                     kernel_size=kernel_size
                                 ))
         conv_layers.append(torch.nn.Conv1d(
                                 in_channels=hidden_channels[-1], 
-                                out_channels=out_chanels,
+                                out_channels=out_channels,
                                 kernel_size=kernel_size
                             ))
         self.conv_layers = torch.nn.ModuleList(conv_layers)
@@ -116,7 +116,7 @@ class CNN(torch.nn.Module):
         # (Optional) batch normalization layers
         if batch_norm:
             bn_layers = [torch.nn.BatchNorm1d(hidden_channels[i]) for i in range(self.depth - 1)]
-            bn_layers.append(torch.nn.BatchNorm1d(out_chanels))
+            bn_layers.append(torch.nn.BatchNorm1d(out_channels))
         else:
             bn_layers = [torch.nn.Identity()] * self.depth 
         bn_layers = torch.nn.ModuleList(bn_layers)
