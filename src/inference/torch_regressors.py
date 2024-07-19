@@ -96,9 +96,10 @@ class CNN(torch.nn.Module):
 
         # Convolutional layers
         conv_layers = [torch.nn.Conv1d(
-                            in_channels=in_channels, 
-                            out_channels=hidden_channels[0],
-                            kernel_size=kernel_size
+                            in_channels = in_channels, 
+                            out_channels = hidden_channels[0],
+                            kernel_size = kernel_size,
+                            padding = 'same'
                         )]
         for i in range(1, self.depth - 1):
             conv_layers.append(torch.nn.Conv1d(
