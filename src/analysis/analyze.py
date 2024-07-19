@@ -5,7 +5,7 @@ from typing import List, Any
 
 from .plot import *
 sys.path.insert(0, '../')
-from inference.ratio_method import ratio_method
+from inference.ratio_method import RatioMethod
 from processing.preprocessing import tensor_to_avg_over_tsrc
 from fitting.fit import fit_corrs
 
@@ -46,11 +46,13 @@ def analysis_pred(
 
     # Get ratio method data
     if args.compare_ratio_method == 1:
-        ds_ratio_method = ratio_method(
-            corr_2pt_i = corr_i,
-            corr_2pt_o = corr_o,
-            lab_ind_list = args.train_ind_list+args.bc_ind_list
+        ratio_method = RatioMethod(
+            corr_i = corr_i, 
+            corr_o = corr_o, 
+            lab_ind_list = args.train_ind_list + args.bc_ind_list,
+            boosted = args.modify_ratio
         )
+        ds_ratio_method = ratio_method.predict()
 
     if args.compare_ml_ratio_method == 1:
         corr_o_train_pred = corr_o_train_pred_tensor.T.reshape((num_tau, num_cfgs, -1)).numpy()
@@ -75,11 +77,13 @@ def analysis_pred(
         corr_o_pred = np.swapaxes(corr_o_pred, 1, 2)
         print("corr_o_pred.shape:", corr_o_pred.shape, )
         print("corr_o.shape:", corr_o.shape, )
-        ds_ml_ratio_method = ratio_method(
-            corr_2pt_i = corr_o_pred,
-            corr_2pt_o = corr_o,
-            lab_ind_list = args.train_ind_list + args.bc_ind_list
+        ml_ratio_method = RatioMethod(
+            corr_i = corr_o_pred,
+            corr_o = corr_o,
+            lab_ind_list = args.train_ind_list + args.bc_ind_list,
+            boosted = args.modify_ratio
         )
+        ds_ml_ratio_method = ml_ratio_method.predict()
 
     # POST-PROCESS DATA ----------------------------------------------------------------------------
     n_corr_o_unlab_vs_tau = tensor_to_avg_over_tsrc(n_corr_o_unlab_tensor, num_tau, num_cfgs)
