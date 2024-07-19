@@ -68,9 +68,10 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Datasets and results:
+# Datasets, results, and deprecated code:
 data/
 results/
+deprecated/
 
 # Sphinx documentation
 docs/_build/
