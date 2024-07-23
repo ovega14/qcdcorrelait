@@ -164,7 +164,8 @@ def train_model(
         plt.plot(losses, c='k')
         plt.ylabel('Loss')
         plt.xlabel('Iterations')
-        save_plot(fig=fig, path='../../plots', filename='training_loss')
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_loss')
+        f'{args.results_dir}/plots/'
     
     # Sklearn regressor training
     else:
