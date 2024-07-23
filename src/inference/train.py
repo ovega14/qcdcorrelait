@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+import gvar as gv
 
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
@@ -32,7 +33,7 @@ SKLEARN_REGRESSORS: dict[str, SklearnRegressor] = {
     'DTR': DecisionTreeRegressor,
     'RFR': RandomForestRegressor,
     'GBR': GradientBoostingRegressor,
-    'Linear': LinearRegression,
+    'LinearRegression': LinearRegression,
     'Ridge': Ridge,
     'Lasso': Lasso
 }
@@ -78,7 +79,7 @@ def make_model(
     elif reg_method in SKLEARN_REGRESSORS.keys():
         print(f'Using {reg_method} for regression.')
 
-        if reg_method == 'Linear':
+        if reg_method == 'LinearRegression':
             model = LinearRegression()
         elif reg_method == 'Ridge':
             model = Ridge()
@@ -142,6 +143,7 @@ def train_model(
         model.train()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         losses = []
+        correlations = []
 
         for i in range(training_steps):
             lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
@@ -159,29 +161,35 @@ def train_model(
                 print('Step:', i)
                 print(f'Loss: {loss.item():.12f} | lr: {lr2:.12f}')
             losses.append(loss.item())
+            correlation = gv.corr(prediction, n_corr_2pt_l_train_tensor)
+            correlations.append(correlation.item())
+            
         # Plot loss
         fig = plt.figure(figsize=(8., 6.))
         plt.plot(losses, c='k')
         plt.ylabel('Loss')
         plt.xlabel('Iterations')
         save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_loss')
-        f'{args.results_dir}/plots/'
+
+        # Plot correlation over training time
+        fig = plt.figure(figsize=(8., 6.))
+        plt.plot(losses, c='k')
+        plt.ylabel('Correlation between Predicted and Truth Correlator')
+        plt.xlabel('Iterations')
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_correlation')
     
     # Sklearn regressor training
     else:
-        if hasattr(model, '__iter__'):  # should only be the gradient-boosted trees
-            def fit_gbr(gbr_list: List[SklearnRegressor]) -> List[SklearnRegressor]:
-                """Each gbr is fit to a single time extent in the target correlator."""
-                nonlocal model
-                model = []
-                for tau, gbr in enumerate(gbr_list):
-                    gbr.fit(
-                        n_corr_2pt_s_train_tensor.numpy(), 
-                        n_corr_2pt_l_train_tensor.numpy()[:, tau]
-                    )
-                    model.append(gbr)
-                return model
-            model = map(fit_gbr, model)
+        if isinstance(model, list):  # should only be the GBR
+            gbr_list: List[SklearnRegressor] = []
+            for tau, gbr in enumerate(model):
+                print('fitting gbr at tau =', tau)
+                gbr.fit(
+                    n_corr_2pt_s_train_tensor.numpy(), 
+                    n_corr_2pt_l_train_tensor.numpy()[:, tau]
+                )
+                gbr_list.append(gbr)
+            return gbr_list
         else:
             model.fit(n_corr_2pt_s_train_tensor.numpy(), n_corr_2pt_l_train_tensor.numpy())
-    return model
+            return model
