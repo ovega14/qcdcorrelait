@@ -58,6 +58,10 @@ def predict(
             n_corr_o_bc_pred_tensor = net(copy.deepcopy(n_corr_i_bc_tensor))
     else:
         if reg_method == 'GBR':
+            n_corr_o_train_pred_tensor = []
+            n_corr_o_unlab_pred_tensor = []
+            n_corr_o_bc_pred_tensor = []
+            
             gbr_list = model
             for reg in gbr_list:  # one for each tau
                 train_pred = reg.predict(n_corr_i_train_tensor.numpy())

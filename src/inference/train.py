@@ -1,5 +1,7 @@
 import torch
 import torch.nn.functional as F
+import gvar as gv
+import numpy as np
 
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
@@ -32,7 +34,7 @@ SKLEARN_REGRESSORS: dict[str, SklearnRegressor] = {
     'DTR': DecisionTreeRegressor,
     'RFR': RandomForestRegressor,
     'GBR': GradientBoostingRegressor,
-    'Linear': LinearRegression,
+    'LinearRegression': LinearRegression,
     'Ridge': Ridge,
     'Lasso': Lasso
 }
@@ -78,7 +80,7 @@ def make_model(
     elif reg_method in SKLEARN_REGRESSORS.keys():
         print(f'Using {reg_method} for regression.')
 
-        if reg_method == 'Linear':
+        if reg_method == 'LinearRegression':
             model = LinearRegression()
         elif reg_method == 'Ridge':
             model = Ridge()
@@ -142,6 +144,8 @@ def train_model(
         model.train()
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         losses = []
+        correlations = []
+        mean_correlations = []
 
         for i in range(training_steps):
             lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
@@ -159,28 +163,59 @@ def train_model(
                 print('Step:', i)
                 print(f'Loss: {loss.item():.12f} | lr: {lr2:.12f}')
             losses.append(loss.item())
+            
+            prediction = prediction.detach().numpy()
+            truth = n_corr_2pt_l_train_tensor.detach().numpy()
+            correlation = np.corrcoef(prediction, truth, rowvar=False)
+            #if i % 100 == 0:
+            #    print('correlation:', correlation)
+            correlations.append(correlation)
+            mean_correlations.append(np.mean(correlation, axis=(0, 1)))
+            
         # Plot loss
         fig = plt.figure(figsize=(8., 6.))
         plt.plot(losses, c='k')
         plt.ylabel('Loss')
         plt.xlabel('Iterations')
-        save_plot(fig=fig, path='../../plots', filename='training_loss')
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_loss')
+
+        # Plot mean correlations over training time
+        fig = plt.figure(figsize=(8., 6.))
+        plt.plot(mean_correlations, c='k')
+        plt.ylabel('Correlation between Predicted and Truth Correlator')
+        plt.xlabel('Iterations')
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_correlation')
+
+        # Save plots of correlation heatmaps over training time
+        fig, axes = plt.subplots(1, 5, sharey=True, figsize=(20, 4.))
+        fig.supylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
+        for i in range(4):
+            ax = axes[i]
+            ax.imshow(correlations[50*i], cmap='hot')
+            ax.set_xlabel(f'Iter {50*i}')
+        im = axes[-1].imshow(correlations[-1], cmap='hot')
+        axes[-1].set_xlabel(f'Iter {len(losses)}')
+        #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
+        #fig.colorbar(im, cax=cbar_ax)
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='correlation_heatmaps')
+
+        fig = plt.figure(figsize=(8., 8.))
+        plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
+        plt.imshow(correlations[-1], cmap='hot')
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='final_correlation')
     
     # Sklearn regressor training
     else:
-        if hasattr(model, '__iter__'):  # should only be the gradient-boosted trees
-            def fit_gbr(gbr_list: List[SklearnRegressor]) -> List[SklearnRegressor]:
-                """Each gbr is fit to a single time extent in the target correlator."""
-                nonlocal model
-                model = []
-                for tau, gbr in enumerate(gbr_list):
-                    gbr.fit(
-                        n_corr_2pt_s_train_tensor.numpy(), 
-                        n_corr_2pt_l_train_tensor.numpy()[:, tau]
-                    )
-                    model.append(gbr)
-                return model
-            model = map(fit_gbr, model)
+        if isinstance(model, list):  # should only be the GBR
+            gbr_list: List[SklearnRegressor] = []
+            for tau, gbr in enumerate(model):
+                print('fitting gbr at tau =', tau)
+                gbr.fit(
+                    n_corr_2pt_s_train_tensor.numpy(), 
+                    n_corr_2pt_l_train_tensor.numpy()[:, tau]
+                )
+                gbr_list.append(gbr)
+            return gbr_list
         else:
             model.fit(n_corr_2pt_s_train_tensor.numpy(), n_corr_2pt_l_train_tensor.numpy())
     return model
