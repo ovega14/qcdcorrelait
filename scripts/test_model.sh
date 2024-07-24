@@ -54,7 +54,7 @@ do
     mkdir ../results/$name/plots
     mkdir ../results/$name/model
     mkdir ../results/$name/results
-		python -W ignore test_model.py \
+		python -W ignore main.py \
         --seed $seed \
         --use_torch $use_torch \
         --input_dataname $input_dataname \
