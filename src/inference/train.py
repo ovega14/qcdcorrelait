@@ -167,8 +167,8 @@ def train_model(
             prediction = prediction.detach().numpy()
             truth = n_corr_2pt_l_train_tensor.detach().numpy()
             correlation = np.corrcoef(prediction, truth, rowvar=False)
-            if i % 100 == 0:
-                print('correlation:', correlation)
+            #if i % 100 == 0:
+            #    print('correlation:', correlation)
             correlations.append(correlation)
             mean_correlations.append(np.mean(correlation, axis=(0, 1)))
             
