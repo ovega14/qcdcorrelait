@@ -170,8 +170,8 @@ def train_model(
             #if i % 100 == 0:
             #    print('correlation:', correlation)
             correlations.append(correlation)
-            mean_correlations.append(np.mean(correlation, axis=(0, 1)))
-            
+            #mean_correlations.append(np.mean(correlation, axis=(0, 1)))
+            mean_correlations.append(correlation[70, 191+70])
         # Plot loss
         fig = plt.figure(figsize=(8., 6.))
         plt.plot(losses, c='k')
