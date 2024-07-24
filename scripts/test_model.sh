@@ -32,7 +32,7 @@ do
     echo $use_torch $reg_method $input_dataname $output_dataname $dict_hyperparams
     NOW=$(date +"%Y-%m-%d-%H-%M-%S")
     num=$num
-    name=$reg_method+mi1_${mi1label[$i]}_mi2_${mi2label[$i]}_mo1_${mo1label[$i]}_mo2_${mo2label[$i]}+$NOW+$num
+    name=test_model_$reg_method+mi1_${mi1label[$i]}_mi2_${mi2label[$i]}_mo1_${mo1label[$i]}_mo2_${mo2label[$i]}+$NOW+$num
     if [ -d "results/"$name ]
     then
         echo "results/"$name" already exists"
