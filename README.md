@@ -3,3 +3,4 @@ Toolkit for AI-enhanced computation of correlation functions in quantum chromody
 
 ## Authors:
 - Octavio Vega (octavio5[at]illinois[dot]edu)
+- Andrew Lytle <email>
