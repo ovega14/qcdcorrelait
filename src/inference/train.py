@@ -179,7 +179,7 @@ def train_model(
         plt.xlabel('Iterations')
         save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_loss')
 
-        # Plot correlation over training time
+        # Plot mean correlations over training time
         fig = plt.figure(figsize=(8., 6.))
         plt.plot(mean_correlations, c='k')
         plt.ylabel('Correlation between Predicted and Truth Correlator')
@@ -187,20 +187,21 @@ def train_model(
         save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_correlation')
 
         # Save plots of correlation heatmaps over training time
-        fig, axes = plt.subplots(1, 5, sharey=True, figsize=(16, 4.))
+        fig, axes = plt.subplots(1, 5, sharey=True, figsize=(20, 4.))
         fig.supylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
         for i in range(4):
             ax = axes[i]
-            ax.imshow(correlations[50*i][:192, :192], cmap='hot')
+            ax.imshow(correlations[50*i], cmap='hot')
             ax.set_xlabel(f'Iter {50*i}')
-        im = axes[-1].imshow(correlations[-1][:192, :192], cmap='hot')
+        im = axes[-1].imshow(correlations[-1], cmap='hot')
         axes[-1].set_xlabel(f'Iter {len(losses)}')
-        #plt.colorbar(im)
+        #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
+        #fig.colorbar(im, cax=cbar_ax)
         save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='correlation_heatmaps')
 
         fig = plt.figure(figsize=(8., 8.))
         plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
-        plt.imshow(correlations[-1][:96, :96], cmap='hot')
+        plt.imshow(correlations[-1], cmap='hot')
         save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='final_correlation')
     
     # Sklearn regressor training
