@@ -2,14 +2,14 @@
 export OMP_NUM_THREADS=1
 #ulimit -Sv 9000000
 seed=42
-use_torch=0
+use_torch=1
 num=0
 #dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
 rel_eps=1e-2
 # respecify params here !!!
 torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-reg_method0="GBR"
+reg_method0="MLP"
 
 mi1label=("0.548")
 mi2label=("0.01555")

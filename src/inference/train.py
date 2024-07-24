@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import gvar as gv
+import numpy as np
 
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
@@ -144,6 +145,7 @@ def train_model(
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         losses = []
         correlations = []
+        mean_correlations = []
 
         for i in range(training_steps):
             lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
@@ -161,8 +163,14 @@ def train_model(
                 print('Step:', i)
                 print(f'Loss: {loss.item():.12f} | lr: {lr2:.12f}')
             losses.append(loss.item())
-            correlation = gv.corr(prediction, n_corr_2pt_l_train_tensor)
-            correlations.append(correlation.item())
+            
+            prediction = prediction.detach().numpy()
+            truth = n_corr_2pt_l_train_tensor.detach().numpy()
+            correlation = np.corrcoef(prediction, truth, rowvar=False)
+            if i % 100 == 0:
+                print('correlation:', correlation)
+            correlations.append(correlation)
+            mean_correlations.append(np.mean(correlation, axis=(0, 1)))
             
         # Plot loss
         fig = plt.figure(figsize=(8., 6.))
@@ -173,10 +181,27 @@ def train_model(
 
         # Plot correlation over training time
         fig = plt.figure(figsize=(8., 6.))
-        plt.plot(losses, c='k')
+        plt.plot(mean_correlations, c='k')
         plt.ylabel('Correlation between Predicted and Truth Correlator')
         plt.xlabel('Iterations')
         save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_correlation')
+
+        # Save plots of correlation heatmaps over training time
+        fig, axes = plt.subplots(1, 5, sharey=True, figsize=(16, 4.))
+        fig.supylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
+        for i in range(4):
+            ax = axes[i]
+            ax.imshow(correlations[50*i][:192, :192], cmap='hot')
+            ax.set_xlabel(f'Iter {50*i}')
+        im = axes[-1].imshow(correlations[-1][:192, :192], cmap='hot')
+        axes[-1].set_xlabel(f'Iter {len(losses)}')
+        #plt.colorbar(im)
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='correlation_heatmaps')
+
+        fig = plt.figure(figsize=(8., 8.))
+        plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
+        plt.imshow(correlations[-1][:96, :96], cmap='hot')
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='final_correlation')
     
     # Sklearn regressor training
     else:
@@ -192,4 +217,4 @@ def train_model(
             return gbr_list
         else:
             model.fit(n_corr_2pt_s_train_tensor.numpy(), n_corr_2pt_l_train_tensor.numpy())
-            return model
+    return model
