@@ -49,7 +49,8 @@ def predict(
     use_torch: bool = args.use_torch
     reg_method = args.reg_method
     
-    if use_torch == 1:
+    #if use_torch == 1:
+    if isinstance(model, torch.nn.Module):
         net = model
         net.eval()
         with torch.no_grad():
