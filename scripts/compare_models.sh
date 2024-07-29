@@ -28,9 +28,9 @@ params=()
 for i in "${!mi1label[@]}"
 do
 
-    for reg_method in reg_methods
+    for reg_method in "${reg_methods[@]}"
     do
-        param=("$use_torch $reg_method0 P5-P5_RW_RW_d_d_m"${mi1label[$i]}"_m"${mi2label[$i]}"_p000 P5-P5_RW_RW_d_d_m"${mo1label[$i]}"_m"${mo2label[$i]}"_p000 {\"lr\":0.01,\"l2_coeff\":1e-2,\"training_steps\":200}")
+        param=("$use_torch $reg_method P5-P5_RW_RW_d_d_m"${mi1label[$i]}"_m"${mi2label[$i]}"_p000 P5-P5_RW_RW_d_d_m"${mo1label[$i]}"_m"${mo2label[$i]}"_p000 {\"lr\":0.01,\"l2_coeff\":1e-2,\"training_steps\":200}")
         read use_torch reg_method input_dataname output_dataname dict_hyperparams<<< "$param"
         echo $use_torch $reg_method $input_dataname $output_dataname $dict_hyperparams
         NOW=$(date +"%Y-%m-%d-%H-%M-%S")
