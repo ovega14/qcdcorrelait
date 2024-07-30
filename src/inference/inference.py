@@ -46,10 +46,8 @@ def predict(
     corr_i_bc_tensor = dict_data["corr_i_bc_tensor"]
     n_corr_i_bc_tensor = (corr_i_bc_tensor - corr_i_train_means) / corr_i_train_stds
     
-    use_torch: bool = args.use_torch
     reg_method = args.reg_method
     
-    #if use_torch == 1:
     if isinstance(model, torch.nn.Module):
         net = model
         net.eval()
