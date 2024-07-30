@@ -27,7 +27,7 @@ mo2label=("0.01555")
 params=()
 for i in "${!mi1label[@]}"
 do
-
+    mkdir ../results/model_comparison
     for reg_method in "${reg_methods[@]}"
     do
         param=("$use_torch $reg_method P5-P5_RW_RW_d_d_m"${mi1label[$i]}"_m"${mi2label[$i]}"_p000 P5-P5_RW_RW_d_d_m"${mo1label[$i]}"_m"${mo2label[$i]}"_p000 {\"lr\":0.01,\"l2_coeff\":1e-2,\"training_steps\":200}")
@@ -48,11 +48,11 @@ do
                 exit
             fi
         fi
-        mkdir -p ../results/$name
-        mkdir ../results/$name/data
-        mkdir ../results/$name/plots
-        mkdir ../results/$name/model
-        mkdir ../results/$name/results
+        mkdir -p ../results/model_comparison/$name
+        mkdir ../results/model_comparison/$name/data
+        mkdir ../results/model_comparison/$name/plots
+        mkdir ../results/model_comparison/$name/model
+        mkdir ../results/model_comparison/$name/results
             python -W ignore main.py \
             --seed $seed \
             --use_torch $use_torch \
@@ -61,6 +61,6 @@ do
             --reg_method $reg_method \
             --dict_hyperparams $dict_hyperparams \
             --rel_eps $rel_eps \
-            --results_dir "../results/$name"
+            --results_dir "../results/model_comparison/$name"
     done
 done
