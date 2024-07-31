@@ -46,25 +46,23 @@ NTAU = 192  # 192 time extents in our datasets
 # MODEL PREPARATION AND TRAINING
 #===================================================================================================
 def make_model(
-    args: argparse.Namespace
+    reg_method: str,
+    seed: int = 42
 ) -> Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]]:
     """
     Prepares a regression model to be trained.
 
     Args:
-        args: A Namespace object containing arguments
+        reg_method: Name of method to use for regression
+        seed: Integer seed to use for reproducibility
 
     Returns:
         model: An initialized PyTorch or SkLearn regressor
     """
-    torch.manual_seed(args.seed)
-    use_torch: bool = args.use_torch
-    reg_method: str = args.reg_method
-
+    torch.manual_seed(seed)
     global NTAU
 
     if reg_method in TORCH_REGRESSORS.keys():
-        assert use_torch, 'Torch regressor supplied but not using torch.'
         print(f'Using {reg_method} for regression.')
 
         if reg_method == 'MLP':

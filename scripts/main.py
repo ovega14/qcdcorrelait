@@ -15,13 +15,15 @@ from inference.inference import predict
 from analysis.analyze import analysis_pred
 
 
+def test_model(args):
+    """Does the full pipeline for a single ML model."""
+
+
 def main(args):
-    ### INITIALIZATION -----------------------------------------------------------------------------
     seed = args.seed
     set_np_seed(seed)
     torch.set_default_dtype(torch.float64)  # essential for high-precision, small-value correlators
 
-    use_torch = args.use_torch
     hdf5_filename = args.hdf5_filename
     input_dataname = args.input_dataname
     output_dataname = args.output_dataname
@@ -55,7 +57,7 @@ def main(args):
         corr_i, corr_o, train_ind_list, bc_ind_list, unlab_ind_list,
     )
 
-    model = make_model(args)
+    model = make_model(args.reg_method, args.seed)
     model = train_model(dict_data, args, model)
 
     save_model(model=model, path=args.results_dir+'/model')
