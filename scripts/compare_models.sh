@@ -28,12 +28,12 @@ params=()
 for i in "${!mi1label[@]}"
 do
     
-    param=("$use_torch $reg_method P5-P5_RW_RW_d_d_m"${mi1label[$i]}"_m"${mi2label[$i]}"_p000 P5-P5_RW_RW_d_d_m"${mo1label[$i]}"_m"${mo2label[$i]}"_p000 {\"lr\":0.01,\"l2_coeff\":1e-2,\"training_steps\":200}")
-    read use_torch reg_method input_dataname output_dataname dict_hyperparams<<< "$param"
-    echo $use_torch $reg_method $input_dataname $output_dataname $dict_hyperparams
+    param=("$use_torch $reg_methods P5-P5_RW_RW_d_d_m"${mi1label[$i]}"_m"${mi2label[$i]}"_p000 P5-P5_RW_RW_d_d_m"${mo1label[$i]}"_m"${mo2label[$i]}"_p000 {\"lr\":0.01,\"l2_coeff\":1e-2,\"training_steps\":200}")
+    read use_torch reg_methods input_dataname output_dataname dict_hyperparams<<< "$param"
+    echo $use_torch ${reg_methods} $input_dataname $output_dataname $dict_hyperparams
     NOW=$(date +"%Y-%m-%d-%H-%M-%S")
     num=$num
-    name=compare_$reg_methods+mi1_${mi1label[$i]}_mi2_${mi2label[$i]}_mo1_${mo1label[$i]}_mo2_${mo2label[$i]}+$NOW+$num
+    name=compare_${reg_methods}+mi1_${mi1label[$i]}_mi2_${mi2label[$i]}_mo1_${mo1label[$i]}_mo2_${mo2label[$i]}+$NOW+$num
     if [ -d "results/"$name ]
     then
         echo "results/"$name" already exists"
@@ -51,10 +51,10 @@ do
     do
         mkdir -p ../results/$name/$reg_method
         mkdir ../results/$name/$reg_method/data
-        mkdir ../results/model_comparison/$name/$reg_method/plots
-        mkdir ../results/model_comparison/$name/$reg_method/model
-        mkdir ../results/model_comparison/$name/$reg_method/results
-            python -W ignore main.py \
+        mkdir ../results/$name/$reg_method/plots
+        mkdir ../results/$name/$reg_method/model
+        mkdir ../results/$name/$reg_method/results
+        python -W ignore main.py \
             --seed $seed \
             --use_torch $use_torch \
             --input_dataname $input_dataname \
