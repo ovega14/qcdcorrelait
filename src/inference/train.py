@@ -103,8 +103,9 @@ def make_model(
     
 def train_model(
     dict_data: dict[str, torch.Tensor], 
-    args: argparse.Namespace,
-    model: Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]]
+    hyperparams: dict[str, Union[int, float]],
+    model: Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]],
+    results_dir: str
 ) -> Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]]:
     """
     Trains the model.
@@ -117,7 +118,9 @@ def train_model(
 
     Args:
         dict_data: Dictionary of preprocessed correlator data
-        args: A Namespace object containing arguments
+        hyperparams: Dictionary of hyperparameters for training, e.g. learning rate, etc.
+        model: Regressor(s) to be trained
+        results_dir: Name of directory in which resultant plots from training will be saved
     
     Returns:
         Trained model
@@ -132,7 +135,7 @@ def train_model(
     n_corr_2pt_s_train_tensor = (corr_i_train_tensor - corr_i_train_means) / corr_i_train_stds
     n_corr_2pt_l_train_tensor = (corr_o_train_tensor - corr_o_train_means) / corr_o_train_stds
     
-    dict_hyperparams = json.loads(args.dict_hyperparams)
+    dict_hyperparams = json.loads(hyperparams)
     lr = dict_hyperparams['lr']
     l2_coeff = dict_hyperparams['l2_coeff']
     training_steps = dict_hyperparams['training_steps']
@@ -175,14 +178,14 @@ def train_model(
         plt.plot(losses, c='k')
         plt.ylabel('Loss')
         plt.xlabel('Iterations')
-        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_loss')
+        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='training_loss')
 
         # Plot mean correlations over training time
         fig = plt.figure(figsize=(8., 6.))
         plt.plot(mean_correlations, c='k')
         plt.ylabel('Correlation between Predicted and Truth Correlator')
         plt.xlabel('Iterations')
-        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='training_correlation')
+        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='training_correlation')
 
         # Save plots of correlation heatmaps over training time
         fig, axes = plt.subplots(1, 5, sharey=True, figsize=(20, 4.))
@@ -195,12 +198,12 @@ def train_model(
         axes[-1].set_xlabel(f'Iter {len(losses)}')
         #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
         #fig.colorbar(im, cax=cbar_ax)
-        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='correlation_heatmaps')
+        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='correlation_heatmaps')
 
         fig = plt.figure(figsize=(8., 8.))
         plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
         plt.imshow(correlations[-1], cmap='hot')
-        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='final_correlation')
+        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='final_correlation')
     
     # Sklearn regressor training
     else:

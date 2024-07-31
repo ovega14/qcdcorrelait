@@ -58,7 +58,7 @@ def main(args):
     )
 
     model = make_model(args.reg_method, args.seed)
-    model = train_model(dict_data, args, model)
+    model = train_model(dict_data, args.dict_hyperparams, model, args.results_dir)
 
     save_model(model=model, path=args.results_dir+'/model')
 
