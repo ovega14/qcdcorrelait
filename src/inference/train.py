@@ -66,7 +66,7 @@ def make_model(
         print(f'Using {reg_method} for regression.')
 
         if reg_method == 'MLP':
-            model = MLP(NTAU, NTAU, hidden_dims=[NTAU // 4], batch_norm=True)
+            model = MLP(NTAU, NTAU, hidden_dims=[NTAU // 4], batch_norm=False)
         elif reg_method == 'Linear':
             model = LinearModel(NTAU, NTAU)
         elif reg_method == 'CNN':
