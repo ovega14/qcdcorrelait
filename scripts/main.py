@@ -32,9 +32,9 @@ def test_model(
 ) -> dict[str, Fit]:
     """Does the full pipeline for a single ML model."""
     model = make_model(reg_method, args.seed)
-    model = train_model(dict_data, args.dict_hyperparams, model, args.results_dir + '/' + reg_method)
+    model = train_model(dict_data, args.dict_hyperparams, model, results_dir)
 
-    save_model(model=model, path=args.results_dir + '/' + reg_method +'/model')
+    save_model(model=model, path=results_dir +'/model')
 
     n_corr_i_train_tensor = (dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
     dict_results = predict(
@@ -133,11 +133,12 @@ def main(args):
         corr_i, corr_o, train_ind_list, bc_ind_list, unlab_ind_list,
     )
 
-    if not isinstance(args.reg_methods, str):  # compare multiple reg methods
+    if len(args.reg_methods) >= 2:  # compare multiple reg methods
         print('Comparing reg methods:', args.reg_methods)
         compare_models(dict_data, corr_i, corr_o, num_tau, num_cfgs, num_tsrc, args.reg_methods, args)
     else:
-        test_model(dict_data, corr_i, corr_o, num_tau, num_cfgs, num_tsrc, args.reg_methods, args)
+        reg_method = args.reg_methods[0]
+        test_model(dict_data, corr_i, corr_o, num_tau, num_cfgs, num_tsrc, reg_method, args.results_dir, args)
     
 
 # --------------------------------------------------------------------------------------------------
@@ -148,7 +149,6 @@ if __name__ == '__main__':
     add('--seed', type=int, default=42)
     add('--compare_ratio_method', type=int, default=1)
     add('--compare_ml_ratio_method', type=int, default=1)
-    add('--use_torch', type=int, default=1)
     add('--save_results', type=int, default=0)
     add('--hdf5_filename', type=str, default='../data/l64192a_run2_810-6996_1028cfgs.hdf5')
     add('--input_dataname', type=str, default='P5-P5_RW_RW_d_d_m0.164_m0.01555_p000')

@@ -355,3 +355,10 @@ def plot_error_breakdown(
 
     plt.legend()
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename=fig_name)
+
+
+#===================================================================================================
+# FIT PARAMETERS (GLOBAL COMPARISON)
+#===================================================================================================
+def plot_fit_params(dict_fits):
+    pass
