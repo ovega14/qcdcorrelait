@@ -36,6 +36,7 @@ def plot_correlators(
     corr_o_pred_uncorrected: npt.NDArray,
     ds_ratio_method: dict[str, npt.NDArray],
     ds_ml_ratio_method: dict[str, npt.NDArray],
+    results_dir,
     args
 ) -> None:
     """
@@ -107,7 +108,7 @@ def plot_correlators(
     plt.yscale('log')
     plt.legend()
 
-    save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='pred_correlator')
+    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_correlator')
 
 
 #===================================================================================================
@@ -118,7 +119,7 @@ def plot_relative_correlated_difference(
     n_corr_o_unlab_pred_vs_tau,
     n_corr_o_bc_vs_tau,
     n_corr_o_bc_pred_vs_tau,
-    args,
+    results_dir
 ) -> None:
     """
     Computes and plots relative correlated differences for correlator data.
@@ -147,7 +148,7 @@ def plot_relative_correlated_difference(
     plt.ylabel('Rel. correlated diff.')
 
     plt.legend()
-    save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='rel_correlated_diff')
+    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='rel_correlated_diff')
     
 
 #===================================================================================================
@@ -161,6 +162,7 @@ def plot_noise_to_signal(
     corr_o_pred_uncorrected,
     ds_ratio_method,
     ds_ml_ratio_method,
+    results_dir,
     args
 ) -> None:
     """
@@ -233,7 +235,7 @@ def plot_noise_to_signal(
     plt.yscale(yscale)
 
     plt.legend(fontsize=12)
-    save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='pred_nts')
+    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_nts')
     
 
 def plot_normalized_noise_to_signal(
@@ -244,6 +246,7 @@ def plot_normalized_noise_to_signal(
     corr_o_pred_uncorrected,
     ds_ratio_method,
     ds_ml_ratio_method,
+    results_dir,
     args
 ) -> None:
     """
@@ -306,7 +309,7 @@ def plot_normalized_noise_to_signal(
     plt.yscale('linear')
 
     plt.legend(fontsize=12)
-    save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='pred_nts_normalized')
+    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_nts_normalized')
     
 
 #===================================================================================================
@@ -316,7 +319,7 @@ def plot_error_breakdown(
     pred_corrected,
     pred_uncorrected,
     bias_correction,
-    args,
+    results_dir,
     fig_name = './error_breakdown',
     truth = None,
 ) -> None:
@@ -351,4 +354,4 @@ def plot_error_breakdown(
     plt.ylabel(r'Normalized Error Squared')
 
     plt.legend()
-    save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename=fig_name)
+    save_plot(fig=fig, path=f'{results_dir}/plots/', filename=fig_name)

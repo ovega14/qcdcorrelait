@@ -20,7 +20,7 @@ SklearnRegressor = TypeVar('SklearnRegressor')
 def predict(
     n_corr_i_train_tensor: torch.Tensor,
     model: Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]],
-    args: argparse.Namespace,
+    reg_method: str,
     dict_data: dict[str, torch.tensor]
 ) -> dict[str, torch.Tensor]:
     """
@@ -29,7 +29,7 @@ def predict(
     Args:
         n_corr_i_train_tensor: The unlabeled input correlator data from which to predict
         model: A trained regressor
-        args: A namespace object containing arguments
+        reg_method: Name of regression method being used
         dict_data: Dictionary of preprocessed data
     
     Returns:
@@ -45,8 +45,6 @@ def predict(
     
     corr_i_bc_tensor = dict_data["corr_i_bc_tensor"]
     n_corr_i_bc_tensor = (corr_i_bc_tensor - corr_i_train_means) / corr_i_train_stds
-    
-    reg_method = args.reg_method
     
     if isinstance(model, torch.nn.Module):
         net = model

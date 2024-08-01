@@ -1,7 +1,8 @@
 import numpy as np
 import gvar as gv
 import numpy.typing as npt
-from typing import List, Any
+from typing import List, Any, TypeVar
+Fit = TypeVar('Fit')
 
 from .plot import *
 from .tabulate import FitParamsTable
@@ -19,8 +20,10 @@ def analysis_pred(
     num_tsrc: int,
     dict_data: dict[str, npt.NDArray],
     dict_results: dict[str, npt.NDArray],
+    reg_method,
+    results_dir,
     args,
-) -> None:
+) -> dict[str, dict[str, Fit]]:
     """
     Performs the full analysis of the predicted correlator data, including plots and tables.
 
@@ -114,6 +117,7 @@ def analysis_pred(
         corr_o_pred_uncorrected = corr_o_pred_uncorrected,
         ds_ratio_method = ds_ratio_method,
         ds_ml_ratio_method = ds_ml_ratio_method,
+        results_dir = results_dir,
         args = args
     )
 
@@ -122,7 +126,7 @@ def analysis_pred(
         n_corr_o_unlab_pred_vs_tau,
         n_corr_o_bc_vs_tau,
         n_corr_o_bc_pred_vs_tau,
-        args
+        results_dir = results_dir
     )
 
     plot_noise_to_signal(
@@ -133,6 +137,7 @@ def analysis_pred(
         corr_o_pred_uncorrected = corr_o_pred_uncorrected,
         ds_ratio_method = ds_ratio_method,
         ds_ml_ratio_method = ds_ml_ratio_method,
+        results_dir = results_dir,
         args = args
     )
 
@@ -144,6 +149,7 @@ def analysis_pred(
         corr_o_pred_uncorrected = corr_o_pred_uncorrected,
         ds_ratio_method = ds_ratio_method,
         ds_ml_ratio_method = ds_ml_ratio_method,
+        results_dir = results_dir,
         args = args
     )
 
@@ -151,7 +157,7 @@ def analysis_pred(
         pred_corrected = corr_o_pred_corrected,
         pred_uncorrected = corr_o_pred_uncorrected,
         bias_correction = corr_o_bias_correction,
-        args = args,
+        results_dir = results_dir,
         fig_name = 'error_breakdown',
         truth = corr_o_truth,
     )
@@ -189,16 +195,17 @@ def analysis_pred(
     
     filename = dict_opts.get('filename')
     dict_fits = fit_corrs(dict_orig_corrs, dict_opts)
+    all_dict_fits = dict_fits.copy()
 
     # WRITE RESULTS---------------------------------------------------------------------------------
-    with open(f'{args.results_dir}/results/fits.txt', 'w') as f:
+    with open(results_dir + '/results/fits.txt', 'w') as f:
         for tag in dict_fits.keys():
             print(tag, file=f)
             print(dict_fits[tag], file=f)
-    with open(f'{args.results_dir}/results/latex_table.txt', 'w') as f:
+    with open(results_dir + '/results/latex_table.txt', 'w') as f:
         for tag in dict_fits.keys():
             print(tag + ':\n', file=f)
-            print(FitParamsTable.write_line(args.reg_method, dict_fits, filename, tag), file=f)
+            print(FitParamsTable.write_line(reg_method, dict_fits, filename, tag), file=f)
             print('=' * 120, file=f)
 
     if args.compare_ratio_method == 1:
@@ -208,7 +215,7 @@ def analysis_pred(
             gv_ds = ds_ratio_method,
             excluding_tags=['hp_i', 'lp_i']
         )
-        with open(f'{args.results_dir}/results/fits.txt', 'a') as f:
+        with open(results_dir + '/results/fits.txt', 'a') as f:
             for tag in dict_fits.keys():
                 if tag == 'hp_o_pred':
                     print("ratio_method_pred", file=f)
@@ -217,7 +224,7 @@ def analysis_pred(
                 else:
                     print(tag, file=f)
                 print(dict_fits[tag], file=f)
-        with open(f'{args.results_dir}/results/latex_table.txt', 'a') as f:
+        with open(results_dir + '/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
                 if tag == 'hp_o_pred':
                     print(tag + ':\n', file=f)
@@ -227,8 +234,9 @@ def analysis_pred(
                     print(FitParamsTable.write_line('bRM', dict_fits, filename, tag), file=f)
                 else:
                     print(tag + ':\n', file=f)
-                    print(FitParamsTable.write_line(args.reg_method, dict_fits, filename, tag), file=f)
+                    print(FitParamsTable.write_line(reg_method, dict_fits, filename, tag), file=f)
                 print('=' * 120, file=f)
+        all_dict_fits.update(dict_fits)
     
     if args.compare_ml_ratio_method == 1:
         dict_fits = fit_corrs(
@@ -237,7 +245,7 @@ def analysis_pred(
             gv_ds = ds_ml_ratio_method,
             excluding_tags=['hp_o', 'hp_i', 'lp_i', 'lp_o']
         )
-        with open(f'{args.results_dir}/results/fits.txt', 'a') as f:
+        with open(results_dir + '/results/fits.txt', 'a') as f:
             for tag in dict_fits.keys():
                 if tag == 'hp_o_pred':
                     print("ml_ratio_method_pred", file=f)
@@ -246,7 +254,7 @@ def analysis_pred(
                 else:
                     print(tag, file=f)
                 print(dict_fits[tag], file=f)
-        with open(f'{args.results_dir}/results/latex_table.txt', 'a') as f:
+        with open(results_dir + '/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
                 if tag == 'hp_o_pred':
                     print(tag + ':\n', file=f)
@@ -256,5 +264,8 @@ def analysis_pred(
                     print(FitParamsTable.write_line('bRM + ML', dict_fits, filename, tag), file=f)
                 else:
                     print(tag + ':\n', file=f)
-                    print(FitParamsTable.write_line(args.reg_method, dict_fits, filename, tag), file=f)
+                    print(FitParamsTable.write_line(reg_method, dict_fits, filename, tag), file=f)
                 print('=' * 120, file=f)
+        all_dict_fits.update(dict_fits)
+
+        return all_dict_fits

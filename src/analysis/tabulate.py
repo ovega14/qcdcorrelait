@@ -92,14 +92,14 @@ class FitParamsTable(Table):
     def __str__(self):
         table = self.make_header()
         if self.include_truth:
-            fit_truth = self.dict_fits[0]['corr_o_truth']  # truth data same for all methods
+            fit_truth = self.dict_fits[self.reg_methods[0]]['corr_o_truth']  # same for all methods
             a_truth = fit_truth.p[self.filename + ':a']
             dE_truth = fit_truth.p[self.filename + ':dE']
             chi2_dof_truth = fit_truth.chi2 / fit_truth.dof
             Q_truth = fit_truth.Q
             
             table += '\n\\hline\n\\rowcolor{green!40}\n'
-            table += 'TRUTH &'
+            table += 'TRUTH & '
             for i in range(self.num_states):
                 table +=f'{a_truth[i]} & {dE_truth[i]} & '
             table += f'{round(chi2_dof_truth, 4)} & {round(Q_truth, 4)} \\\\'

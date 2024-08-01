@@ -6,6 +6,9 @@ import argparse
 import json
 import copy
 
+from typing import TypeVar
+Fit = TypeVar('Fit')
+
 import sys
 sys.path.insert(0, '../src/')
 from utils import save_model, save_results, set_np_seed
@@ -13,12 +16,86 @@ from processing.preprocessing import get_corrs, preprocess_data
 from inference.train import make_model, train_model
 from inference.inference import predict
 from analysis.analyze import analysis_pred
+from analysis.tabulate import FitParamsTable
 
 
-def test_model(args):
+def test_model(
+    dict_data, 
+    corr_i, 
+    corr_o, 
+    num_tau,
+    num_cfgs, 
+    num_tsrc,
+    reg_method,
+    results_dir,
+    args
+) -> dict[str, Fit]:
     """Does the full pipeline for a single ML model."""
+    model = make_model(reg_method, args.seed)
+    model = train_model(dict_data, args.dict_hyperparams, model, args.results_dir + '/' + reg_method)
+
+    save_model(model=model, path=args.results_dir + '/' + reg_method +'/model')
+
+    n_corr_i_train_tensor = (dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
+    dict_results = predict(
+        n_corr_i_train_tensor = n_corr_i_train_tensor,
+        model = model,
+        reg_method = reg_method,
+        dict_data = dict_data,
+    )
+
+    if args.save_results == 1:
+        save_results(dict_results=dict_results, path=args.results_dir+'/results')
+
+    dict_data["n_corr_o_train_tensor"] = (dict_data["corr_o_train_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
+
+    dict_data["n_corr_i_unlab_tensor"] = (dict_data["corr_i_unlab_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
+    dict_data["n_corr_o_unlab_tensor"] = (dict_data["corr_o_unlab_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
+
+    dict_data["n_corr_i_bc_tensor"] = (dict_data["corr_i_bc_tensor"] -  dict_data["corr_i_train_means"]) /  dict_data["corr_i_train_stds"]
+    dict_data["n_corr_o_bc_tensor"] = (dict_data["corr_o_bc_tensor"] -  dict_data["corr_o_train_means"]) /  dict_data["corr_o_train_stds"]
+
+    fits = analysis_pred(
+        corr_i, corr_o,
+        num_tau, num_cfgs, num_tsrc,
+        dict_data,
+        dict_results,
+        reg_method,
+        results_dir,
+        args
+    )
+    return fits
 
 
+def compare_models(
+    dict_data, 
+    corr_i, 
+    corr_o, 
+    num_tau,
+    num_cfgs, 
+    num_tsrc,
+    reg_methods,
+    args
+):
+    filename = args.input_dataname + '_' + args.output_dataname
+
+    reg_fits: dict[str, dict[str, Fit]] = {}
+    for reg_method in reg_methods:
+        results_dir = args.results_dir + '/' + reg_method
+        reg_fits[reg_method] = test_model(
+            dict_data, 
+            corr_i, corr_o, 
+            num_tau, num_cfgs, num_tsrc, 
+            reg_method,
+            results_dir,
+            args)
+    
+    fits_table = FitParamsTable(reg_fits, reg_methods, 'corr_o_pred_corrected', filename)
+    with open(args.results_dir + '/fit_params_table.txt', 'w') as f:
+        print(fits_table, file=f)
+
+
+#===================================================================================================
 def main(args):
     seed = args.seed
     set_np_seed(seed)
@@ -29,7 +106,6 @@ def main(args):
     output_dataname = args.output_dataname
     train_ind_list = args.train_ind_list
     bc_ind_list = args.bc_ind_list
-    reg_method = args.reg_method
     rel_eps = args.rel_eps
     dict_hyperparams = json.loads(args.dict_hyperparams)
 
@@ -57,37 +133,11 @@ def main(args):
         corr_i, corr_o, train_ind_list, bc_ind_list, unlab_ind_list,
     )
 
-    model = make_model(args.reg_method, args.seed)
-    model = train_model(dict_data, args.dict_hyperparams, model, args.results_dir)
-
-    save_model(model=model, path=args.results_dir+'/model')
-
-    n_corr_i_train_tensor = (dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
-    dict_results = predict(
-        n_corr_i_train_tensor=n_corr_i_train_tensor,
-        model=model,
-        args=args,
-        dict_data=dict_data,
-    )
-
-    if args.save_results == 1:
-        save_results(dict_results=dict_results, path=args.results_dir+'/results')
-
-    dict_data["n_corr_o_train_tensor"] = (dict_data["corr_o_train_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
-
-    dict_data["n_corr_i_unlab_tensor"] = (dict_data["corr_i_unlab_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
-    dict_data["n_corr_o_unlab_tensor"] = (dict_data["corr_o_unlab_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
-
-    dict_data["n_corr_i_bc_tensor"] = (dict_data["corr_i_bc_tensor"] -  dict_data["corr_i_train_means"]) /  dict_data["corr_i_train_stds"]
-    dict_data["n_corr_o_bc_tensor"] = (dict_data["corr_o_bc_tensor"] -  dict_data["corr_o_train_means"]) /  dict_data["corr_o_train_stds"]
-
-    analysis_pred(
-        corr_i, corr_o,
-        num_tau, num_cfgs, num_tsrc,
-        dict_data,
-        dict_results,
-        args
-    )
+    if not isinstance(args.reg_methods, str):  # compare multiple reg methods
+        print('Comparing reg methods:', args.reg_methods)
+        compare_models(dict_data, corr_i, corr_o, num_tau, num_cfgs, num_tsrc, args.reg_methods, args)
+    else:
+        test_model(dict_data, corr_i, corr_o, num_tau, num_cfgs, num_tsrc, args.reg_methods, args)
     
 
 # --------------------------------------------------------------------------------------------------
@@ -105,7 +155,7 @@ if __name__ == '__main__':
     add('--output_dataname', type=str, default='P5-P5_RW_RW_d_d_m0.164_m0.00311_p000')
     add('--train_ind_list', type=str, default='[0]')
     add('--bc_ind_list', type=str, default='[3, 6, 12, 15, 18]')
-    add('--reg_method', type=str, default='MLP')
+    add('--reg_methods', nargs='+', type=str, default='MLP')
     add('--dict_hyperparams', type=str, default='{"lr": 0.01, "l2_coeff": 1e-2, "training_steps": 500}')
     add('--rel_eps', type=float, default=1e-2)
     add('--modify_ratio', type=int, default=1)

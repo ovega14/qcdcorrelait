@@ -9,7 +9,8 @@ rel_eps=1e-2
 # respecify params here !!!
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-reg_methods=("MLP" "CNN" "Transformer" "Ridge" "GBR")
+#reg_methods=("MLP" "CNN" "Transformer" "Ridge" "GBR")
+reg_methods=("MLP" "CNN" "Ridge")
 
 mi1label=("0.548")
 mi2label=("0.01555")
@@ -47,21 +48,21 @@ do
         fi
     fi
     mkdir ../results/$name
+    mkdir ../results/$name/data
     for reg_method in "${reg_methods[@]}"
     do
         mkdir -p ../results/$name/$reg_method
-        mkdir ../results/$name/$reg_method/data
         mkdir ../results/$name/$reg_method/plots
         mkdir ../results/$name/$reg_method/model
         mkdir ../results/$name/$reg_method/results
-        python -W ignore main.py \
-            --seed $seed \
-            --use_torch $use_torch \
-            --input_dataname $input_dataname \
-            --output_dataname $output_dataname \
-            --reg_method $reg_method \
-            --dict_hyperparams $dict_hyperparams \
-            --rel_eps $rel_eps \
-            --results_dir ../results/$name/$reg_method
     done
+    python -W ignore main.py \
+        --seed $seed \
+        --use_torch $use_torch \
+        --input_dataname $input_dataname \
+        --output_dataname $output_dataname \
+        --reg_methods "${reg_methods[@]}" \
+        --dict_hyperparams $dict_hyperparams \
+        --rel_eps $rel_eps \
+        --results_dir ../results/$name
 done
