@@ -49,45 +49,43 @@ def analysis_pred(
     n_corr_o_bc_pred_tensor = dict_results["n_corr_o_bc_pred_tensor"]
 
     # Get ratio method data
-    if args.compare_ratio_method == 1:
-        ratio_method = RatioMethod(
-            corr_i = corr_i, 
-            corr_o = corr_o, 
-            lab_ind_list = args.train_ind_list + args.bc_ind_list,
-            boosted = args.modify_ratio
-        )
-        ds_ratio_method = ratio_method.predict()
+    ratio_method = RatioMethod(
+        corr_i = corr_i, 
+        corr_o = corr_o, 
+        lab_ind_list = args.train_ind_list + args.bc_ind_list,
+        boosted = args.modify_ratio
+    )
+    ds_ratio_method = ratio_method.predict()
 
-    if args.compare_ml_ratio_method == 1:
-        corr_o_train_pred = corr_o_train_pred_tensor.T.reshape((num_tau, num_cfgs, -1)).numpy()
-        corr_o_bc_pred = corr_o_bc_pred_tensor.T.reshape((num_tau, num_cfgs, -1)).numpy()
-        corr_o_unlab_pred = corr_o_unlab_pred_tensor.T.reshape((num_tau, num_cfgs, -1)).numpy()
-        corr_o_pred = []
-        curr_ind_train = 0
-        curr_ind_bc = 0
-        curr_ind_unlab = 0
-        for i in range(num_tsrc):
-            if i in args.train_ind_list:
-                corr_o_pred.append(corr_o_train_pred[:, :, curr_ind_train])
-                curr_ind_train += 1
-            elif i in args.bc_ind_list:
-                corr_o_pred.append(corr_o_bc_pred[:, :, curr_ind_bc])
-                curr_ind_bc += 1
-            else:
-                corr_o_pred.append(corr_o_unlab_pred[:, :, curr_ind_unlab])
-                curr_ind_unlab += 1
-        corr_o_pred = np.array(corr_o_pred)
-        corr_o_pred = np.swapaxes(corr_o_pred, 0, 1)
-        corr_o_pred = np.swapaxes(corr_o_pred, 1, 2)
-        print("corr_o_pred.shape:", corr_o_pred.shape, )
-        print("corr_o.shape:", corr_o.shape, )
-        ml_ratio_method = RatioMethod(
-            corr_i = corr_o_pred,
-            corr_o = corr_o,
-            lab_ind_list = args.train_ind_list + args.bc_ind_list,
-            boosted = args.modify_ratio
-        )
-        ds_ml_ratio_method = ml_ratio_method.predict()
+    corr_o_train_pred = corr_o_train_pred_tensor.T.reshape((num_tau, num_cfgs, -1)).numpy()
+    corr_o_bc_pred = corr_o_bc_pred_tensor.T.reshape((num_tau, num_cfgs, -1)).numpy()
+    corr_o_unlab_pred = corr_o_unlab_pred_tensor.T.reshape((num_tau, num_cfgs, -1)).numpy()
+    corr_o_pred = []
+    curr_ind_train = 0
+    curr_ind_bc = 0
+    curr_ind_unlab = 0
+    for i in range(num_tsrc):
+        if i in args.train_ind_list:
+            corr_o_pred.append(corr_o_train_pred[:, :, curr_ind_train])
+            curr_ind_train += 1
+        elif i in args.bc_ind_list:
+            corr_o_pred.append(corr_o_bc_pred[:, :, curr_ind_bc])
+            curr_ind_bc += 1
+        else:
+            corr_o_pred.append(corr_o_unlab_pred[:, :, curr_ind_unlab])
+            curr_ind_unlab += 1
+    corr_o_pred = np.array(corr_o_pred)
+    corr_o_pred = np.swapaxes(corr_o_pred, 0, 1)
+    corr_o_pred = np.swapaxes(corr_o_pred, 1, 2)
+    print("corr_o_pred.shape:", corr_o_pred.shape, )
+    print("corr_o.shape:", corr_o.shape, )
+    ml_ratio_method = RatioMethod(
+        corr_i = corr_o_pred,
+        corr_o = corr_o,
+        lab_ind_list = args.train_ind_list + args.bc_ind_list,
+        boosted = args.modify_ratio
+    )
+    ds_ml_ratio_method = ml_ratio_method.predict()
 
     # POST-PROCESS DATA ----------------------------------------------------------------------------
     n_corr_o_unlab_vs_tau = tensor_to_avg_over_tsrc(n_corr_o_unlab_tensor, num_tau, num_cfgs)
@@ -217,19 +215,14 @@ def analysis_pred(
         )
         with open(results_dir + '/results/fits.txt', 'a') as f:
             for tag in dict_fits.keys():
-                if tag == 'hp_o_pred':
-                    print("ratio_method_pred", file=f)
-                elif tag == 'hp_o_pred_modified':
-                    print("ratio_method_pred_modified", file=f)
-                else:
-                    print(tag, file=f)
+                print(tag, file=f)
                 print(dict_fits[tag], file=f)
         with open(results_dir + '/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
-                if tag == 'hp_o_pred':
+                if tag == 'ratio_method_pred':
                     print(tag + ':\n', file=f)
                     print(FitParamsTable.write_line('RM', dict_fits, filename, tag), file=f)
-                elif tag == 'hp_o_pred_modified':
+                elif tag == 'ratio_method_pred_modified':
                     print(tag + ':\n', file=f)
                     print(FitParamsTable.write_line('bRM', dict_fits, filename, tag), file=f)
                 else:
@@ -247,19 +240,19 @@ def analysis_pred(
         )
         with open(results_dir + '/results/fits.txt', 'a') as f:
             for tag in dict_fits.keys():
-                if tag == 'hp_o_pred':
+                if tag == 'ratio_method_pred':
                     print("ml_ratio_method_pred", file=f)
-                elif tag == 'hp_o_pred_modified':
+                elif tag == 'ratio_method_pred_modified':
                     print("ml_ratio_method_pred_modified", file=f)
                 else:
                     print(tag, file=f)
                 print(dict_fits[tag], file=f)
         with open(results_dir + '/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
-                if tag == 'hp_o_pred':
+                if tag == 'ratio_method_pred':
                     print(tag + ':\n', file=f)
                     print(FitParamsTable.write_line('RM + ML', dict_fits, filename, tag), file=f)
-                elif tag == 'hp_o_pred_modified':
+                elif tag == 'ratio_method_pred_modified':
                     print(tag + ':\n', file=f)
                     print(FitParamsTable.write_line('bRM + ML', dict_fits, filename, tag), file=f)
                 else:

@@ -4,13 +4,15 @@ export OMP_NUM_THREADS=1
 seed=42
 num=0
 track_corrs=0
+compare_ratio_method=1
+compare_ml_ratio_method=1
 #dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
 rel_eps=1e-2
 # respecify params here !!!
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
 #reg_methods=("MLP" "CNN" "Transformer" "Ridge" "GBR")
-reg_methods=("MLP" "CNN" "Ridge")
+reg_methods=("MLP" "CNN")
 
 mi1label=("0.548")
 mi2label=("0.01555")
@@ -63,5 +65,7 @@ do
         --reg_methods "${reg_methods[@]}" \
         --dict_hyperparams $dict_hyperparams \
         --results_dir ../results/$name\
-        --track_corrs $track_corrs
+        --track_corrs $track_corrs\
+        --compare_ratio_method $compare_ratio_method\
+        --compare_ml_ratio_method $compare_ml_ratio_method
 done
