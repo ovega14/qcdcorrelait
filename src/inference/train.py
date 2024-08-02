@@ -105,7 +105,8 @@ def train_model(
     dict_data: dict[str, torch.Tensor], 
     hyperparams: dict[str, Union[int, float]],
     model: Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]],
-    results_dir: str
+    results_dir: str,
+    track_corrs: bool
 ) -> Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]]:
     """
     Trains the model.
@@ -165,14 +166,15 @@ def train_model(
                 print(f'Loss: {loss.item():.12f} | lr: {lr2:.12f}')
             losses.append(loss.item())
             
-            prediction = prediction.detach().numpy()
-            truth = n_corr_2pt_l_train_tensor.detach().numpy()
-            correlation = np.corrcoef(prediction, truth, rowvar=False)
-            #if i % 100 == 0:
-            #    print('correlation:', correlation)
-            correlations.append(correlation)
-            #mean_correlations.append(np.mean(correlation, axis=(0, 1)))
-            mean_correlations.append(correlation[70, 191+70])
+            if track_corrs:
+                prediction = prediction.detach().numpy()
+                truth = n_corr_2pt_l_train_tensor.detach().numpy()
+                correlation = np.corrcoef(prediction, truth, rowvar=False)
+                #if i % 100 == 0:
+                #    print('correlation:', correlation)
+                correlations.append(correlation)
+                #mean_correlations.append(np.mean(correlation, axis=(0, 1)))
+                mean_correlations.append(correlation[70, 191+70])
         # Plot loss
         fig = plt.figure(figsize=(8., 6.))
         plt.plot(losses, c='k')
@@ -180,31 +182,31 @@ def train_model(
         plt.xlabel('Iterations')
         save_plot(fig=fig, path=f'{results_dir}/plots/', filename='training_loss')
 
-        # Plot mean correlations over training time
-        fig = plt.figure(figsize=(8., 6.))
-        plt.plot(mean_correlations, c='k')
-        plt.ylabel('Correlation between Predicted and Truth Correlator')
-        plt.xlabel('Iterations')
-        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='training_correlation')
+        if track_corrs:
+            fig = plt.figure(figsize=(8., 6.))
+            plt.plot(mean_correlations, c='k')
+            plt.ylabel('Correlation between Predicted and Truth Correlator')
+            plt.xlabel('Iterations')
+            save_plot(fig=fig, path=f'{results_dir}/plots/', filename='training_correlation')
 
-        # Save plots of correlation heatmaps over training time
-        fig, axes = plt.subplots(1, 5, sharey=True, figsize=(20, 4.))
-        fig.supylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
-        for i in range(4):
-            ax = axes[i]
-            ax.imshow(correlations[50*i], cmap='hot')
-            ax.set_xlabel(f'Iter {50*i}')
-        im = axes[-1].imshow(correlations[-1], cmap='hot')
-        axes[-1].set_xlabel(f'Iter {len(losses)}')
-        #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
-        #fig.colorbar(im, cax=cbar_ax)
-        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='correlation_heatmaps')
+            # Save plots of correlation heatmaps over training time
+            fig, axes = plt.subplots(1, 5, sharey=True, figsize=(20, 4.))
+            fig.supylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
+            for i in range(4):
+                ax = axes[i]
+                ax.imshow(correlations[50*i], cmap='hot')
+                ax.set_xlabel(f'Iter {50*i}')
+            im = axes[-1].imshow(correlations[-1], cmap='hot')
+            axes[-1].set_xlabel(f'Iter {len(losses)}')
+            #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
+            #fig.colorbar(im, cax=cbar_ax)
+            save_plot(fig=fig, path=f'{results_dir}/plots/', filename='correlation_heatmaps')
 
-        fig = plt.figure(figsize=(8., 8.))
-        plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
-        plt.imshow(correlations[-1], cmap='hot')
-        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='final_correlation')
-    
+            fig = plt.figure(figsize=(8., 8.))
+            plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
+            plt.imshow(correlations[-1], cmap='hot')
+            save_plot(fig=fig, path=f'{results_dir}/plots/', filename='final_correlation')
+        
     # Sklearn regressor training
     else:
         if isinstance(model, list):  # should only be the GBR

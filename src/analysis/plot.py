@@ -360,5 +360,58 @@ def plot_error_breakdown(
 #===================================================================================================
 # FIT PARAMETERS (GLOBAL COMPARISON)
 #===================================================================================================
-def plot_fit_params(dict_fits):
-    pass
+def plot_fit_params(tag, filename, dict_fits, args):
+    reg_methods = list(dict_fits.keys())
+
+    # Truth data
+    fit_truth = dict_fits[reg_methods[0]]['corr_o_truth']
+    a_truth = fit_truth.p[filename + ':a']
+    dE_truth = fit_truth.p[filename + ':dE']
+
+    # Plot the truth & ML fit parameters as errorbars
+    plt.rc('text', usetex=True)
+    plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+    font = {'weight' : 'normal',
+            'size'   : 18}
+    fig, axes = plt.subplots(2, 2)#, figsize=(8, 5))
+
+    for i in range(0, 2):  # amplitudes
+        axes[0, i].errorbar(x=0, y=a_truth[i].mean, yerr=a_truth[i].sdev, linestyle='None', elinewidth=0.65, capsize=1.5, capthick=0.75, fmt='o', mfc='white', ms=1.75, markeredgewidth=0.75, label='Truth')
+        for j, method in enumerate(reg_methods):
+            fit = dict_fits[method][tag]
+            a_pred = fit.p[filename + ':a']
+            axes[0, i].errorbar(x=j+1, y=a_pred[i].mean, yerr=a_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=0.75, label=f'{method[:-2]}')
+        if args.compare_ratio_method:
+            for j, method in enumerate(reg_methods):
+                fit_rm = dict_fits[method]['ml_ratio_method_pred']
+                a_rm = fit_rm.p[filename + ':a']
+                axes[0, i].errorbar(x=len(reg_methods)+j+1, y=a_rm[i].mean, yerr=a_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=0.75, label=f'RM + {method[:-2]}')
+        axes[0, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), a_truth[i].mean - a_truth[i].sdev, a_truth[i].mean + a_truth[i].sdev, alpha=0.2)
+        axes[0, i].set_xlim(-1, 2*len(reg_methods)+1)
+        axes[0, i].set_ylabel(f'$a_{i}$')
+        axes[0, i].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+
+    for i in range(0, 2):  # energies
+        axes[1, i].errorbar(x=0, y=dE_truth[i].mean, yerr=dE_truth[i].sdev, linestyle='None', elinewidth=0.65, capsize=1.5, capthick=0.75, fmt='o', mfc='white', ms=1.75, markeredgewidth=0.75, label='Truth')
+        for j, method in enumerate(reg_methods):
+            fit = dict_fits[tag][method[:-2]]
+            dE_pred = fit.p[filename + ':dE']
+            axes[1, i].errorbar(x=j+1, y=dE_pred[i].mean, yerr=dE_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=0.75, label=f'{method[:-2]}')
+        if args.compare_ratio_method:
+            for j, method in enumerate(reg_methods):
+                fit_rm = dict_fits[method]['ml_ratio_method_pred']
+                dE_rm = fit_rm.p[filename + ':dE']
+                axes[1, i].errorbar(x=len(reg_methods)+j+1, y=dE_rm[i].mean, yerr=dE_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=0.75, label=f'RM + {method[:-2]}')
+        axes[1, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), dE_truth[i].mean - dE_truth[i].sdev, dE_truth[i].mean + dE_truth[i].sdev, alpha=0.2)
+        axes[1, i].set_xlim(-1, 2*len(reg_methods)+1)
+        axes[1, i].set_ylabel(f'$dE_{i}$')
+        axes[1, i].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    plt.legend(by_label.values(), by_label.keys(), frameon=False, bbox_to_anchor=(1.15, 0), loc='lower left', fontsize='x-small')
+
+    fig.subplots_adjust(hspace=0.01, wspace=0.01)
+    #plt.tight_layout()
+
+    save_plot(fig=fig, path=args.results_dir, filename='fit_params_comparison')

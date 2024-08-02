@@ -3,8 +3,11 @@ export OMP_NUM_THREADS=1
 #ulimit -Sv 9000000
 seed=42
 num=0
+track_corrs=1
 #dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
-rel_eps=1e-2
+
+train_ind_list="[0]"
+bc_ind_list="[3,6,12,15,18]"
 # respecify params here !!!
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
@@ -55,6 +58,8 @@ do
         --output_dataname $output_dataname \
         --reg_method $reg_method \
         --dict_hyperparams $dict_hyperparams \
-        --rel_eps $rel_eps \
-        --results_dir "../results/$name"
+        --train_ind_list $train_ind_list \
+        --bc_ind_list $bc_ind_list\
+        --results_dir "../results/$name"\
+        --track_corrs $track_corrs
 done

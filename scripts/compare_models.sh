@@ -3,6 +3,7 @@ export OMP_NUM_THREADS=1
 #ulimit -Sv 9000000
 seed=42
 num=0
+track_corrs=0
 #dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
 rel_eps=1e-2
 # respecify params here !!!
@@ -61,6 +62,6 @@ do
         --output_dataname $output_dataname \
         --reg_methods "${reg_methods[@]}" \
         --dict_hyperparams $dict_hyperparams \
-        --rel_eps $rel_eps \
-        --results_dir ../results/$name
+        --results_dir ../results/$name\
+        --track_corrs $track_corrs
 done

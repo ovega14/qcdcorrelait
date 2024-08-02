@@ -17,6 +17,7 @@ from inference.train import make_model, train_model
 from inference.inference import predict
 from analysis.analyze import analysis_pred
 from analysis.tabulate import FitParamsTable
+from analysis.plot import plot_fit_params
 
 
 def test_model(
@@ -32,7 +33,7 @@ def test_model(
 ) -> dict[str, Fit]:
     """Does the full pipeline for a single ML model."""
     model = make_model(reg_method, args.seed)
-    model = train_model(dict_data, args.dict_hyperparams, model, results_dir)
+    model = train_model(dict_data, args.dict_hyperparams, model, results_dir, args.track_corrs)
 
     save_model(model=model, path=results_dir +'/model')
 
@@ -94,6 +95,8 @@ def compare_models(
     with open(args.results_dir + '/fit_params_table.txt', 'w') as f:
         print(fits_table, file=f)
 
+    return reg_fits
+
 
 #===================================================================================================
 def main(args):
@@ -101,13 +104,8 @@ def main(args):
     set_np_seed(seed)
     torch.set_default_dtype(torch.float64)  # essential for high-precision, small-value correlators
 
-    hdf5_filename = args.hdf5_filename
-    input_dataname = args.input_dataname
-    output_dataname = args.output_dataname
     train_ind_list = args.train_ind_list
     bc_ind_list = args.bc_ind_list
-    rel_eps = args.rel_eps
-    dict_hyperparams = json.loads(args.dict_hyperparams)
 
     corr_i, corr_o = get_corrs(
         args.hdf5_filename,
@@ -135,7 +133,13 @@ def main(args):
 
     if len(args.reg_methods) >= 2:  # compare multiple reg methods
         print('Comparing reg methods:', args.reg_methods)
-        compare_models(dict_data, corr_i, corr_o, num_tau, num_cfgs, num_tsrc, args.reg_methods, args)
+        filename = args.input_dataname + '_' + args.output_dataname
+        reg_fits = compare_models(
+            dict_data, 
+            corr_i, corr_o, 
+            num_tau, num_cfgs, num_tsrc, 
+            args.reg_methods, args)
+        plot_fit_params(tag='corr_o_pred_corrected', filename=filename, dict_fits=reg_fits, args=args)
     else:
         reg_method = args.reg_methods[0]
         test_model(dict_data, corr_i, corr_o, num_tau, num_cfgs, num_tsrc, reg_method, args.results_dir, args)
@@ -157,9 +161,9 @@ if __name__ == '__main__':
     add('--bc_ind_list', type=str, default='[3, 6, 12, 15, 18]')
     add('--reg_methods', nargs='+', type=str, default='MLP')
     add('--dict_hyperparams', type=str, default='{"lr": 0.01, "l2_coeff": 1e-2, "training_steps": 500}')
-    add('--rel_eps', type=float, default=1e-2)
     add('--modify_ratio', type=int, default=1)
     add('--results_dir', type=str)
+    add('--track_corrs', type=int, default=0)
 
     args = parser.parse_args()
 
