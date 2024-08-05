@@ -11,8 +11,7 @@ rel_eps=1e-2
 # respecify params here !!!
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-#reg_methods=("MLP" "CNN" "Transformer" "DTR" "Ridge")
-reg_methods=("MLP" "CNN" "DTR" "Ridge")
+reg_methods=("Linear" "MLP" "CNN" "Transformer" "DTR" "RFR" "GBR")
 
 mi1label=("0.548")
 mi2label=("0.01555")

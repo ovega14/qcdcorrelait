@@ -376,33 +376,33 @@ def plot_fit_params(tag, filename, dict_fits, args):
     fig, axes = plt.subplots(2, 2)#, figsize=(8, 5))
 
     for i in range(0, 2):  # amplitudes
-        axes[0, i].errorbar(x=0, y=a_truth[i].mean, yerr=a_truth[i].sdev, linestyle='None', elinewidth=0.65, capsize=1.5, capthick=0.75, fmt='o', mfc='white', ms=1.75, markeredgewidth=0.75, label='Truth')
+        axes[0, i].errorbar(x=0, y=a_truth[i].mean, yerr=a_truth[i].sdev, linestyle='None', color='limegreen', elinewidth=0.65, capsize=1.5, capthick=0.75, fmt='o', mfc='white', ms=2.0, markeredgewidth=0.75, label='Truth')
         for j, method in enumerate(reg_methods):
             fit = dict_fits[method][tag]
             a_pred = fit.p[filename + ':a']
-            axes[0, i].errorbar(x=j+1, y=a_pred[i].mean, yerr=a_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=0.75, label=f'{method}')
+            axes[0, i].errorbar(x=j+1, y=a_pred[i].mean, yerr=a_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=1.0, label=f'{method}')
         if args.compare_ratio_method:
             for j, method in enumerate(reg_methods):
                 fit_rm = dict_fits[method]['hp_o_pred']
                 a_rm = fit_rm.p[filename + ':a']
-                axes[0, i].errorbar(x=len(reg_methods)+j+1, y=a_rm[i].mean, yerr=a_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=0.75, label=f'RM + {method}')
-        axes[0, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), a_truth[i].mean - a_truth[i].sdev, a_truth[i].mean + a_truth[i].sdev, alpha=0.2)
+                axes[0, i].errorbar(x=len(reg_methods)+j+1, y=a_rm[i].mean, yerr=a_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=1.0, label=f'RM + {method}')
+        axes[0, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), a_truth[i].mean - a_truth[i].sdev, a_truth[i].mean + a_truth[i].sdev, color='limegreen', alpha=0.2)
         axes[0, i].set_xlim(-1, 2*len(reg_methods)+1)
         axes[0, i].set_ylabel(f'$a_{i}$')
         axes[0, i].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
 
     for i in range(0, 2):  # energies
-        axes[1, i].errorbar(x=0, y=dE_truth[i].mean, yerr=dE_truth[i].sdev, linestyle='None', elinewidth=0.65, capsize=1.5, capthick=0.75, fmt='o', mfc='white', ms=1.75, markeredgewidth=0.75, label='Truth')
+        axes[1, i].errorbar(x=0, y=dE_truth[i].mean, yerr=dE_truth[i].sdev, linestyle='None', color='limegreen', elinewidth=0.65, capsize=1.5, capthick=0.75, fmt='o', mfc='white', ms=2.0, markeredgewidth=0.75, label='Truth')
         for j, method in enumerate(reg_methods):
             fit = dict_fits[method][tag]
             dE_pred = fit.p[filename + ':dE']
-            axes[1, i].errorbar(x=j+1, y=dE_pred[i].mean, yerr=dE_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=0.75, label=f'{method}')
+            axes[1, i].errorbar(x=j+1, y=dE_pred[i].mean, yerr=dE_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=1.0, label=f'{method}')
         if args.compare_ratio_method:
             for j, method in enumerate(reg_methods):
                 fit_rm = dict_fits[method]['hp_o_pred']
                 dE_rm = fit_rm.p[filename + ':dE']
-                axes[1, i].errorbar(x=len(reg_methods)+j+1, y=dE_rm[i].mean, yerr=dE_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=0.75, label=f'RM + {method}')
-        axes[1, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), dE_truth[i].mean - dE_truth[i].sdev, dE_truth[i].mean + dE_truth[i].sdev, alpha=0.2)
+                axes[1, i].errorbar(x=len(reg_methods)+j+1, y=dE_rm[i].mean, yerr=dE_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=1.0, label=f'RM + {method}')
+        axes[1, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), dE_truth[i].mean - dE_truth[i].sdev, dE_truth[i].mean + dE_truth[i].sdev, color='limegreen', alpha=0.2)
         axes[1, i].set_xlim(-1, 2*len(reg_methods)+1)
         axes[1, i].set_ylabel(f'$dE_{i}$')
         axes[1, i].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
