@@ -147,7 +147,8 @@ def train_model(
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         losses = []
         correlations = []
-        mean_correlations = []
+        diag_correlations = []
+        off_diag_correlations = []
 
         for i in range(training_steps):
             lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
@@ -170,11 +171,12 @@ def train_model(
                 prediction = prediction.detach().numpy()
                 truth = n_corr_2pt_l_train_tensor.detach().numpy()
                 correlation = np.corrcoef(prediction, truth, rowvar=False)
-                #if i % 100 == 0:
-                #    print('correlation:', correlation)
                 correlations.append(correlation)
-                #mean_correlations.append(np.mean(correlation, axis=(0, 1)))
-                mean_correlations.append(correlation[70, 191+70])
+                
+                diag_correlations.append(correlation[4, 191+4])
+                off_diag_correlations.append(correlation[4, 191+12])
+        correlations = np.array(correlations)  # [training_steps, num_tau*2, num_tau*2]
+        
         # Plot loss
         fig = plt.figure(figsize=(8., 6.))
         plt.plot(losses, c='k')
@@ -184,10 +186,23 @@ def train_model(
 
         if track_corrs:
             fig = plt.figure(figsize=(8., 6.))
-            plt.plot(mean_correlations, c='k')
-            plt.ylabel('Correlation between Predicted and Truth Correlator')
-            plt.xlabel('Iterations')
-            save_plot(fig=fig, path=f'{results_dir}/plots/', filename='training_correlation')
+            for tau in range(1, 6):
+                plt.plot(correlations[:, tau, 191 + tau], label=rf'$\tau={tau}$')
+            plt.hlines(1.0, 0, training_steps, color='black', linestyle='dashed')
+            plt.ylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau))$")
+            plt.xlabel('Training Iterations')
+            plt.legend()
+            save_plot(fig=fig, path=f'{results_dir}/plots/', filename='diag_training_correlation')
+
+            fig = plt.figure(figsize=(8., 6.))
+            for tau in range(1, 6):
+                plt.plot(correlations[:, tau, 191 + 12], label=rf'$\tau={tau}$')
+                plt.plot(correlations[:, 191 + tau, 191 + 12], label=rf'Truth, $\tau={tau}$', linestyle='dashed')
+            #plt.plot(correlations[:, 191 + 12, 191 + tau], c='k')
+            plt.ylabel(r"$\rho(O(\tau'=12), O^{\mathrm{pred}}(\tau))$")
+            plt.xlabel('Training Iterations')
+            plt.legend()
+            save_plot(fig=fig, path=f'{results_dir}/plots/', filename='off_diag_training_correlation')
 
             # Save plots of correlation heatmaps over training time
             fig, axes = plt.subplots(1, 5, sharey=True, figsize=(20, 4.))

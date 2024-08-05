@@ -7,11 +7,13 @@ track_corrs=0
 compare_ratio_method=1
 compare_ml_ratio_method=1
 #dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
-rel_eps=1e-2
+train_ind_list="[0]"
+bc_ind_list="[3,6,12,15,18]"
+
 # respecify params here !!!
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-reg_methods=("Linear" "MLP" "CNN" "Transformer" "DTR" "RFR" "GBR")
+reg_methods=("Linear" "MLP" "CNN" "DTR" "RFR")
 
 mi1label=("0.548")
 mi2label=("0.01555")
