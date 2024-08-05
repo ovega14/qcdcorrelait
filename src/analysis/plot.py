@@ -409,9 +409,17 @@ def plot_fit_params(tag, filename, dict_fits, args):
 
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), frameon=False, bbox_to_anchor=(1.15, 0), loc='lower left', fontsize='x-small')
+    plt.legend(
+        by_label.values(), 
+        by_label.keys(), 
+        frameon=False, 
+        bbox_to_anchor=(1.15, 0), 
+        loc='lower left', 
+        fontsize=8
+        #fontsize='x-small'
+    )
 
-    fig.subplots_adjust(hspace=0.01, wspace=0.01)
+    #fig.subplots_adjust(hspace=0.01, wspace=0.01)
     #plt.tight_layout()
 
     save_plot(fig=fig, path=args.results_dir +'/', filename='fit_params_comparison')
