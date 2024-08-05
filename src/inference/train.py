@@ -194,9 +194,11 @@ def train_model(
             fig.supylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
             for i in range(4):
                 ax = axes[i]
-                ax.imshow(correlations[50*i], cmap='hot')
+                im = ax.imshow(correlations[50*i], cmap='hot')
+                im.norm.autoscale([0, 1])
                 ax.set_xlabel(f'Iter {50*i}')
             im = axes[-1].imshow(correlations[-1], cmap='hot')
+            im.norm.autoscale([0, 1])
             axes[-1].set_xlabel(f'Iter {len(losses)}')
             #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
             #fig.colorbar(im, cax=cbar_ax)
