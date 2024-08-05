@@ -3,4 +3,4 @@ This repository contains a framework for performing AI-enhanced computations of 
 
 ## Authors:
 - Octavio Vega (octavio5[at]illinois[dot]edu)
-- Andrew Lytle <email>
+- Andrew Lytle (atlytle[at]illinois[dot]edu)
