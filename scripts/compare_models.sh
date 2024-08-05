@@ -7,7 +7,7 @@ track_corrs=0
 compare_ratio_method=1
 compare_ml_ratio_method=1
 #dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
-train_ind_list="[0]"
+train_ind_list="[5]"
 bc_ind_list="[3,6,12,15,18]"
 
 # respecify params here !!!
@@ -65,6 +65,8 @@ do
         --output_dataname $output_dataname \
         --reg_methods "${reg_methods[@]}" \
         --dict_hyperparams $dict_hyperparams \
+        --train_ind_list $train_ind_list \
+        --bc_ind_list $bc_ind_list\
         --results_dir ../results/$name\
         --track_corrs $track_corrs\
         --compare_ratio_method $compare_ratio_method\

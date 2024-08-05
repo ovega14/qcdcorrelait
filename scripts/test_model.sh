@@ -11,7 +11,7 @@ bc_ind_list="[3,6,12,15,18]"
 # respecify params here !!!
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-reg_method0="MLP"
+reg_method="MLP"
 
 mi1label=("0.548")
 mi2label=("0.01555")
@@ -29,7 +29,7 @@ mo2label=("0.01555")
 params=()
 for i in "${!mi1label[@]}"
 do
-    param=("$reg_method0 P5-P5_RW_RW_d_d_m"${mi1label[$i]}"_m"${mi2label[$i]}"_p000 P5-P5_RW_RW_d_d_m"${mo1label[$i]}"_m"${mo2label[$i]}"_p000 {\"lr\":0.01,\"l2_coeff\":1e-2,\"training_steps\":200}")
+    param=("$reg_method P5-P5_RW_RW_d_d_m"${mi1label[$i]}"_m"${mi2label[$i]}"_p000 P5-P5_RW_RW_d_d_m"${mo1label[$i]}"_m"${mo2label[$i]}"_p000 {\"lr\":0.01,\"l2_coeff\":1e-2,\"training_steps\":200}")
     read reg_method input_dataname output_dataname dict_hyperparams<<< "$param"
     echo $reg_method $input_dataname $output_dataname $dict_hyperparams
     NOW=$(date +"%Y-%m-%d-%H-%M-%S")
