@@ -7,7 +7,7 @@ track_corrs=0
 compare_ratio_method=1
 compare_ml_ratio_method=1
 #dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
-train_ind_list="[5]"
+train_ind_list="[0]"
 bc_ind_list="[3,6,12,15,18]"
 
 # respecify params here !!!
