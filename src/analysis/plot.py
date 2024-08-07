@@ -36,7 +36,7 @@ def plot_correlators(
     corr_o_pred_uncorrected: npt.NDArray,
     ds_ratio_method: dict[str, npt.NDArray],
     ds_ml_ratio_method: dict[str, npt.NDArray],
-    results_dir,
+    results_dir: str,
     args
 ) -> None:
     """
@@ -109,6 +109,47 @@ def plot_correlators(
     plt.legend()
 
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_correlator')
+
+
+"""
+def plot_fit_and_correlator(
+    num_tau: int,
+    corr_o_truth: npt.NDArray,
+    corr_o_pred_corrected: npt.NDArray,
+    results_dir: str,
+    args
+) -> None:
+    fig = plt.figure(figsize=(8., 6.))
+
+    plt.errorbar(
+        x = np.arange(0, num_tau),
+        y = np.average(corr_o_truth, axis=-1),
+        yerr = sem(corr_o_truth, axis=-1),
+        fmt='s', mfc='white', 
+        ms=1.5, capsize=1.5, capthick=0.5, markeredgewidth=0.5, elinewidth=0.5,
+        color = 'limegreen',
+        label = 'Truth'
+    )
+
+    plt.errorbar(
+        x = np.arange(0, num_tau),
+        y = np.average(corr_o_pred_corrected, axis=-1),
+        yerr = sem(corr_o_pred_corrected, axis=-1),
+        fmt='^',
+        ms=1.5, capsize=1.5, capthick=0.5, markeredgewidth=0.5, elinewidth=0.5,
+        color = 'blue',
+        label = args.reg_method,
+    )
+
+    fitline, = plt.plot(
+        x = np.arange(0, num_tau), 
+        y = mu_fit, 
+        lw=1.0, 
+        color='darkorange', 
+        label='Truth Fit')
+    fitband = ax.fill_between(tvals, mu_fit + sdev[4:64], mu_fit - sdev[4:64],
+                          color='darkorange', alpha=0.25)
+    """
 
 
 #===================================================================================================
