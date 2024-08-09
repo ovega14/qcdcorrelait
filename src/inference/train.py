@@ -195,7 +195,7 @@ def train_model(
             save_plot(fig=fig, path=f'{results_dir}/plots/', filename='diag_training_correlation')
 
             fig = plt.figure(figsize=(8., 6.))
-            for tau in range(1, 6):
+            for tau in range(1, 20):
                 plt.plot(correlations[:, tau, 191 + 12], label=rf'$\tau={tau}$')
                 plt.plot(correlations[:, 191 + tau, 191 + 12], label=rf'Truth, $\tau={tau}$', linestyle='dashed')
             #plt.plot(correlations[:, 191 + 12, 191 + tau], c='k')
