@@ -57,7 +57,9 @@ def plot_correlators(
         x = np.arange(0, num_tau),
         y = np.average(corr_o_truth, axis=-1),
         yerr = sem(corr_o_truth, axis=-1),
-        c = 'b',
+        fmt='s', mfc='white', 
+        ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+        color = 'limegreen',
         label = 'Truth',
     )
 
@@ -65,7 +67,9 @@ def plot_correlators(
         x = np.arange(0, num_tau),
         y = np.average(corr_o_train_truth, axis=-1),
         yerr = sem(corr_o_train_truth, axis=-1),
-        c = 'g',
+        fmt='s', 
+        ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+        c = 'b',
         label = 'Training set',
     )
 
@@ -73,6 +77,8 @@ def plot_correlators(
         x = np.arange(0, num_tau),
         y = np.average(corr_o_pred_corrected, axis=-1),
         yerr = sem(corr_o_pred_corrected, axis=-1),
+        fmt='o', 
+        ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
         c = 'r',
         label = 'Pred Corrected',
     )
@@ -81,6 +87,8 @@ def plot_correlators(
         x = np.arange(0, num_tau),
         y = np.average(corr_o_pred_uncorrected, axis=-1),
         yerr = sem(corr_o_pred_uncorrected, axis=-1),
+        fmt='o', 
+        ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
         c = 'gold',
         label = 'Pred Uncorrected',
     )
@@ -91,6 +99,8 @@ def plot_correlators(
             x = np.arange(0, num_tau),
             y = gv.mean(ds_ratio_method['hp_o_pred']),
             yerr = gv.sdev(ds_ratio_method['hp_o_pred']),
+            fmt='d', 
+            ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'c',
             label = 'Pred Ratio Method',
         )
@@ -99,6 +109,8 @@ def plot_correlators(
             x = np.arange(0, num_tau),
             y = gv.mean(ds_ml_ratio_method['hp_o_pred']),
             yerr = gv.sdev(ds_ml_ratio_method['hp_o_pred']),
+            fmt='d', 
+            ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'm',
             label = 'Pred ML+Ratio Method',
         )
@@ -106,7 +118,7 @@ def plot_correlators(
     plt.xlabel('Time extent')
     plt.ylabel('Correlator')
     plt.yscale('log')
-    plt.legend()
+    plt.legend(frameon=False)
 
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_correlator')
 
