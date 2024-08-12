@@ -1,6 +1,6 @@
+#!/usr/bin/env python3
 import torch
 import torch.nn.functional as F
-import gvar as gv
 import numpy as np
 
 from sklearn.tree import DecisionTreeRegressor
@@ -11,13 +11,13 @@ import argparse
 import json
 import matplotlib.pyplot as plt
 
-from .torch_regressors import *
-from .utils import adjust_learning_rate
 import sys
-sys.path.insert(0, '../')
+sys.path.insert(0, '../src/')
 from utils import save_plot
+from inference.torch_regressors import *
+from inference.utils import adjust_learning_rate, l2_regularization
 
-from typing import TypeVar, Union, List
+from typing import TypeVar, Union
 
 TorchRegressor = TypeVar('TorchRegressor')
 SklearnRegressor = TypeVar('SklearnRegressor')
@@ -43,12 +43,12 @@ NTAU = 192  # 192 time extents in our datasets
 
 
 #===================================================================================================
-# MODEL PREPARATION AND TRAINING
+# MODEL PREPARATION
 #===================================================================================================
 def make_model(
     reg_method: str,
-    seed: int = 42
-) -> Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]]:
+    seed: int
+) -> Union[TorchRegressor, SklearnRegressor, list[SklearnRegressor]]:
     """
     Prepares a regression model to be trained.
 
@@ -64,7 +64,6 @@ def make_model(
 
     if reg_method in TORCH_REGRESSORS.keys():
         print(f'Using {reg_method} for regression.')
-
         if reg_method == 'MLP':
             model = MLP(NTAU, NTAU, hidden_dims=[NTAU // 4], batch_norm=False)
         elif reg_method == 'Linear':
@@ -75,9 +74,9 @@ def make_model(
             model = Transformer(input_dim=1, num_heads=1)
         else:
             raise NotImplementedError(f'Unknown Torch regression method {reg_method}.')
+    
     elif reg_method in SKLEARN_REGRESSORS.keys():
         print(f'Using {reg_method} for regression.')
-
         if reg_method == 'LinearRegression':
             model = LinearRegression()
         elif reg_method == 'Ridge':
@@ -89,7 +88,7 @@ def make_model(
         elif reg_method == 'RFR':
             model = RandomForestRegressor()
         elif reg_method == 'GBR':
-            gbr_list: List[SklearnRegressor] = []
+            gbr_list: list[SklearnRegressor] = []
             for _ in range(NTAU):
                 gbr = GradientBoostingRegressor(learning_rate=0.1, n_estimators=100, max_depth=3)
                 gbr_list.append(gbr)
@@ -101,13 +100,41 @@ def make_model(
     return model
         
     
+#===================================================================================================
+# MODEL TRAINING
+#===================================================================================================
+def loss_func(
+    prediction: torch.Tensor, 
+    target: torch.Tensor,
+    l2_coeff: float,
+    model: torch.nn.Module
+) -> torch.FloatTensor:
+    """
+    MSE loss with :math:`\ell_2` regularization. 
+
+    Args:
+        prediction: Data predicted by model
+        target: Training data for the desired output
+        l2_coeff: Coefficient for regularization
+        model: Neural net being trained
+
+    Returns:
+        Scalar-valued loss
+    """
+    loss = F.mse_loss(prediction, target)
+    l2_reg = l2_regularization(l2_coeff, model)
+    
+    return loss + l2_reg
+
+
+
 def train_model(
     dict_data: dict[str, torch.Tensor], 
     hyperparams: dict[str, Union[int, float]],
-    model: Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]],
+    model: Union[TorchRegressor, SklearnRegressor, list[SklearnRegressor]],
     results_dir: str,
     track_corrs: bool
-) -> Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]]:
+) -> Union[TorchRegressor, SklearnRegressor, list[SklearnRegressor]]:
     """
     Trains the model.
     
@@ -154,10 +181,7 @@ def train_model(
             lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
 
             prediction = model(n_corr_2pt_s_train_tensor)
-            loss = F.mse_loss(prediction, n_corr_2pt_l_train_tensor)
-
-            l2_regularization = l2_coeff * sum([(p**2).sum() for (_, p) in model.named_parameters()])
-            loss = loss + l2_regularization
+            loss = loss_func(prediction, n_corr_2pt_l_train_tensor, l2_coeff, model)
 
             optimizer.zero_grad()
             loss.backward()
@@ -227,7 +251,7 @@ def train_model(
     # Sklearn regressor training
     else:
         if isinstance(model, list):  # should only be the GBR
-            gbr_list: List[SklearnRegressor] = []
+            gbr_list: list[SklearnRegressor] = []
             for tau, gbr in enumerate(model):
                 print('fitting gbr at tau =', tau)
                 gbr.fit(
@@ -239,3 +263,16 @@ def train_model(
         else:
             model.fit(n_corr_2pt_s_train_tensor.numpy(), n_corr_2pt_l_train_tensor.numpy())
     return model
+
+
+#===================================================================================================
+def main(args):
+    model = make_model(args.reg_method, args.seed)
+    trained_model = train_model(TODO)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    add = parser.add_argument
+
+    add('--seed', type=int, default=42)
