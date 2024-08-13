@@ -12,9 +12,9 @@ sys.path.insert(0, '../')
 from utils import save_plot
 
 
-#===================================================================================================
+#==============================================================================
 # PLOTTING PREFERENCES
-#===================================================================================================
+#==============================================================================
 plt.rc('text', usetex=True)
 plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 font = {
@@ -22,12 +22,13 @@ font = {
     'size': 18
 }
 matplotlib.rc('font', **font)
-matplotlib.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'  # for \text command
+# for \text command
+matplotlib.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
 
 
-#===================================================================================================
+#==============================================================================
 # CORRELATORS
-#===================================================================================================
+#==============================================================================
 def plot_correlators(
     num_tau: int,
     corr_o_truth: npt.NDArray,
@@ -44,12 +45,12 @@ def plot_correlators(
 
     Args:
         num_tau: Number of time extents being used in the fit
-        corr_o_pred_corrected: Bias-corrected correlator predicted by the ML model
-        corr_o_pred_uncorrected: Bias-uncorrected correlator predicted by the ML model
+        corr_o_pred_corrected: Bias-corrected correlator predicted by ML
+        corr_o_pred_uncorrected: Bias-uncorrected correlator predicted by ML
         corr_o_truth: Truth-level correlator data
         corr_o_train_truth: Subset of truth data reserved for training
         ds_ratio_method: Dictionary of correlators output by ratio method
-        ds_ML_ratio_method: Dictionary of correlators output by ratio method combined with ML
+        ds_ml_ratio_method: Dictionary of correlators output by RM + ML
     """
     fig = plt.figure(figsize=(8., 6.))
 
@@ -57,8 +58,8 @@ def plot_correlators(
         x = np.arange(0, num_tau),
         y = np.average(corr_o_truth, axis=-1),
         yerr = sem(corr_o_truth, axis=-1),
-        fmt='s', mfc='white', 
-        ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+        fmt='s', mfc='white', ms=1.75, 
+        capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
         color = 'limegreen',
         label = 'Truth',
     )
@@ -67,8 +68,8 @@ def plot_correlators(
         x = np.arange(0, num_tau),
         y = np.average(corr_o_train_truth, axis=-1),
         yerr = sem(corr_o_train_truth, axis=-1),
-        fmt='s', 
-        ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+        fmt='s', ms=1.75, 
+        capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
         c = 'b',
         label = 'Training set',
     )
@@ -77,8 +78,8 @@ def plot_correlators(
         x = np.arange(0, num_tau),
         y = np.average(corr_o_pred_corrected, axis=-1),
         yerr = sem(corr_o_pred_corrected, axis=-1),
-        fmt='o', 
-        ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+        fmt='o', ms=1.75, 
+        capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
         c = 'r',
         label = 'Pred Corrected',
     )
@@ -87,8 +88,8 @@ def plot_correlators(
         x = np.arange(0, num_tau),
         y = np.average(corr_o_pred_uncorrected, axis=-1),
         yerr = sem(corr_o_pred_uncorrected, axis=-1),
-        fmt='o', 
-        ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+        fmt='o', ms=1.75, 
+        capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
         c = 'gold',
         label = 'Pred Uncorrected',
     )
@@ -99,8 +100,8 @@ def plot_correlators(
             x = np.arange(0, num_tau),
             y = gv.mean(ds_ratio_method['hp_o_pred']),
             yerr = gv.sdev(ds_ratio_method['hp_o_pred']),
-            fmt='d', 
-            ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+            fmt='d', ms=1.75, 
+            capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'c',
             label = 'Pred Ratio Method',
         )
@@ -109,8 +110,8 @@ def plot_correlators(
             x = np.arange(0, num_tau),
             y = gv.mean(ds_ml_ratio_method['hp_o_pred']),
             yerr = gv.sdev(ds_ml_ratio_method['hp_o_pred']),
-            fmt='d', 
-            ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+            fmt='d', ms=1.75, 
+            capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'm',
             label = 'Pred ML+Ratio Method',
         )
@@ -120,7 +121,11 @@ def plot_correlators(
     plt.yscale('log')
     plt.legend(frameon=False)
 
-    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_correlator')
+    save_plot(
+        fig=fig, 
+        path=f'{results_dir}/plots/', 
+        filename='pred_correlator'
+    )
 
 
 """
@@ -164,9 +169,9 @@ def plot_fit_and_correlator(
     """
 
 
-#===================================================================================================
+#==============================================================================
 # RELATIVE CORRELATED DIFFERENCES 
-#===================================================================================================
+#==============================================================================
 def plot_relative_correlated_difference(
     n_corr_o_unlab_vs_tau, 
     n_corr_o_unlab_pred_vs_tau,
@@ -191,8 +196,16 @@ def plot_relative_correlated_difference(
     
     fig = plt.figure(figsize=(8., 6.))
 
-    plt.plot(relative_diff_n_corr_o_uncorrected, label='Bias-uncorrected', c='b')
-    plt.plot(relative_diff_n_corr_o_corrected, label='Bias-corrected', c='r')
+    plt.plot(
+        relative_diff_n_corr_o_uncorrected, 
+        label='Bias-uncorrected', 
+        c='b'
+    )
+    plt.plot(
+        relative_diff_n_corr_o_corrected, 
+        label='Bias-corrected', 
+        c='r'
+    )
 
     plt.axhline(y=1, c='k', ls='--')
     plt.axhline(y=-1, c='k', ls='--')
@@ -201,12 +214,16 @@ def plot_relative_correlated_difference(
     plt.ylabel('Rel. correlated diff.')
 
     plt.legend()
-    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='rel_correlated_diff')
+    save_plot(
+        fig=fig, 
+        path=f'{results_dir}/plots/', 
+        filename='rel_correlated_diff'
+    )
     
 
-#===================================================================================================
+#==============================================================================
 # NOISE TO SIGNAL RATIOS
-#===================================================================================================
+#==============================================================================
 def plot_noise_to_signal(
     num_tau: int,
     corr_o_truth,
@@ -224,11 +241,12 @@ def plot_noise_to_signal(
     Args:
         num_tau: Number of time extents used for fitting
         corr_o_truth: Truth-level correlator data
-        corr_o_labeled_truth: Subset of truth data reserved for training and bias correction
-        corr_o_pred_corrected: Bias-corrected correlator predicted by the ML model
-        corr_o_pred_uncorrected: Bias-uncorrected correlator predicted by the ML model
+        corr_o_labeled_truth: Subset of truth data reserved for training and
+            bias correction
+        corr_o_pred_corrected: Bias-corrected correlator predicted by ML
+        corr_o_pred_uncorrected: Bias-uncorrected correlator predicted by ML
         ds_ratio_method: Dictionary of correlators output by ratio method
-        ds_ML_ratio_method: Dictionary of correlators output by ratio method combined with ML
+        ds_ML_ratio_method: Dictionary of correlators output by RM + ML
     """
     fig = plt.figure(figsize=(8., 6.))
 
@@ -362,12 +380,16 @@ def plot_normalized_noise_to_signal(
     plt.yscale('linear')
 
     plt.legend(fontsize=12)
-    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_nts_normalized')
+    save_plot(
+        fig=fig, 
+        path=f'{results_dir}/plots/', 
+        filename='pred_nts_normalized'
+    )
     
 
-#===================================================================================================
+#==============================================================================
 # ERROR BREAKDOWN
-#===================================================================================================
+#==============================================================================
 def plot_error_breakdown(
     pred_corrected,
     pred_uncorrected,
@@ -393,8 +415,19 @@ def plot_error_breakdown(
 
     fig = plt.figure(figsize=(8., 6.))
 
-    plt.fill_between(x, y1=y1, color='lightyellow', label='Uncorrected')
-    plt.fill_between(x, y1=y1, y2=y1+y2, color='thistle', label='Bias correction')
+    plt.fill_between(
+        x, 
+        y1=y1, 
+        color='lightyellow', 
+        label='Uncorrected'
+    )
+    plt.fill_between(
+        x, 
+        y1=y1,
+        y2=y1+y2, 
+        color='thistle', 
+        label='Bias-correction'
+    )
 
     plt.axhline(y=1.0, color='r', linestyle = '--', label='Corrected')
 
@@ -410,10 +443,15 @@ def plot_error_breakdown(
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename=fig_name)
 
 
-#===================================================================================================
+#==============================================================================
 # FIT PARAMETERS (GLOBAL COMPARISON)
-#===================================================================================================
-def plot_fit_params(tag, filename, dict_fits, args):
+#==============================================================================
+def plot_fit_params(
+    tag: str, 
+    filename: str, 
+    dict_fits, 
+    args
+) -> None:
     reg_methods = list(dict_fits.keys())
 
     # Truth data
@@ -429,36 +467,102 @@ def plot_fit_params(tag, filename, dict_fits, args):
     fig, axes = plt.subplots(2, 2)#, figsize=(8, 5))
 
     for i in range(0, 2):  # amplitudes
-        axes[0, i].errorbar(x=0, y=a_truth[i].mean, yerr=a_truth[i].sdev, linestyle='None', color='limegreen', elinewidth=0.65, capsize=1.5, capthick=0.75, fmt='o', mfc='white', ms=2.0, markeredgewidth=0.75, label='Truth')
+        axes[0, i].errorbar(
+            x=0, 
+            y=a_truth[i].mean, 
+            yerr=a_truth[i].sdev, 
+            linestyle='None', color='limegreen', 
+            elinewidth=0.65, capsize=1.5, capthick=0.75, 
+            fmt='o', mfc='white', ms=2.0, markeredgewidth=0.75, 
+            label='Truth'
+        )
         for j, method in enumerate(reg_methods):
             fit = dict_fits[method][tag]
             a_pred = fit.p[filename + ':a']
-            axes[0, i].errorbar(x=j+1, y=a_pred[i].mean, yerr=a_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=1.0, label=f'{method}')
+            axes[0, i].errorbar(
+                x=j+1, 
+                y=a_pred[i].mean, 
+                yerr=a_pred[i].sdev, 
+                linestyle='None', 
+                elinewidth=0.5, capsize=1.5, capthick=0.75, 
+                marker='^', ms=1.0, 
+                label=f'{method}'
+            )
         if args.compare_ratio_method:
             for j, method in enumerate(reg_methods):
                 fit_rm = dict_fits[method]['hp_o_pred']
                 a_rm = fit_rm.p[filename + ':a']
-                axes[0, i].errorbar(x=len(reg_methods)+j+1, y=a_rm[i].mean, yerr=a_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=1.0, label=f'RM + {method}')
-        axes[0, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), a_truth[i].mean - a_truth[i].sdev, a_truth[i].mean + a_truth[i].sdev, color='limegreen', alpha=0.2)
+                axes[0, i].errorbar(
+                    x=len(reg_methods)+j+1, 
+                    y=a_rm[i].mean, 
+                    yerr=a_rm[i].sdev, 
+                    linestyle='None', 
+                    elinewidth=0.5, capsize=1.5, capthick=0.75, 
+                    marker='s', ms=1.0, 
+                    label=f'RM + {method}'
+                )
+        axes[0, i].fill_between(
+            np.linspace(-1, 2*len(reg_methods)+1, 20), 
+            a_truth[i].mean - a_truth[i].sdev, 
+            a_truth[i].mean + a_truth[i].sdev, 
+            color='limegreen', alpha=0.2
+        )
         axes[0, i].set_xlim(-1, 2*len(reg_methods)+1)
         axes[0, i].set_ylabel(f'$a_{i}$')
-        axes[0, i].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+        axes[0, i].tick_params(
+            axis='x', 
+            which='both', 
+            bottom=False, top=False, labelbottom=False
+        )
 
     for i in range(0, 2):  # energies
-        axes[1, i].errorbar(x=0, y=dE_truth[i].mean, yerr=dE_truth[i].sdev, linestyle='None', color='limegreen', elinewidth=0.65, capsize=1.5, capthick=0.75, fmt='o', mfc='white', ms=2.0, markeredgewidth=0.75, label='Truth')
+        axes[1, i].errorbar(
+            x=0, 
+            y=dE_truth[i].mean, 
+            yerr=dE_truth[i].sdev, 
+            linestyle='None', color='limegreen', 
+            elinewidth=0.65, capsize=1.5, capthick=0.75, 
+            fmt='o', mfc='white', ms=2.0, markeredgewidth=0.75, 
+            label='Truth'
+        )
         for j, method in enumerate(reg_methods):
             fit = dict_fits[method][tag]
             dE_pred = fit.p[filename + ':dE']
-            axes[1, i].errorbar(x=j+1, y=dE_pred[i].mean, yerr=dE_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=1.0, label=f'{method}')
+            axes[1, i].errorbar(
+                x=j+1, 
+                y=dE_pred[i].mean, 
+                yerr=dE_pred[i].sdev, 
+                linestyle='None', 
+                elinewidth=0.5, capsize=1.5, capthick=0.75, 
+                marker='^', ms=1.0, 
+                label=f'{method}'
+            )
         if args.compare_ratio_method:
             for j, method in enumerate(reg_methods):
                 fit_rm = dict_fits[method]['hp_o_pred']
                 dE_rm = fit_rm.p[filename + ':dE']
-                axes[1, i].errorbar(x=len(reg_methods)+j+1, y=dE_rm[i].mean, yerr=dE_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=1.0, label=f'RM + {method}')
-        axes[1, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), dE_truth[i].mean - dE_truth[i].sdev, dE_truth[i].mean + dE_truth[i].sdev, color='limegreen', alpha=0.2)
+                axes[1, i].errorbar(
+                    x=len(reg_methods)+j+1, 
+                    y=dE_rm[i].mean, 
+                    yerr=dE_rm[i].sdev, 
+                    linestyle='None', 
+                    elinewidth=0.5, capsize=1.5, capthick=0.75, 
+                    marker='s', ms=1.0, 
+                    label=f'RM + {method}'
+                )
+        axes[1, i].fill_between(
+            np.linspace(-1, 2*len(reg_methods)+1, 20), 
+            dE_truth[i].mean - dE_truth[i].sdev, 
+            dE_truth[i].mean + dE_truth[i].sdev, 
+            color='limegreen', alpha=0.2
+        )
         axes[1, i].set_xlim(-1, 2*len(reg_methods)+1)
         axes[1, i].set_ylabel(f'$dE_{i}$')
-        axes[1, i].tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+        axes[1, i].tick_params(
+            axis='x', 
+            which='both', 
+            bottom=False, top=False, labelbottom=False
+        )
 
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
@@ -475,4 +579,8 @@ def plot_fit_params(tag, filename, dict_fits, args):
     #fig.subplots_adjust(hspace=0.01, wspace=0.01)
     #plt.tight_layout()
 
-    save_plot(fig=fig, path=args.results_dir +'/', filename='fit_params_comparison')
+    save_plot(
+        fig=fig, 
+        path=args.results_dir +'/', 
+        filename='fit_params_comparison'
+    )
