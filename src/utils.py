@@ -8,9 +8,9 @@ from typing import TypeVar
 Regressor = TypeVar('Regressor')
 
 
-#===================================================================================================
+#==============================================================================
 # SEEDING
-#===================================================================================================
+#==============================================================================
 def set_np_seed(seed: int) -> None:
     """
     Sets the `numpy` random seed.
@@ -22,9 +22,9 @@ def set_np_seed(seed: int) -> None:
     np.random.seed(seed)
 
 
-#===================================================================================================
+#==============================================================================
 # SAVE DATA
-#===================================================================================================
+#==============================================================================
 def save_model(
     model: Regressor,
     path: str
@@ -35,7 +35,11 @@ def save_model(
     Args: 
         model: A trained Regressor object, either from PyTorch or Sklearn
     """
-    pickle.dump(model, open(f'{path}/model.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(
+        model, 
+        open(f'{path}/model.pkl', 'wb'), 
+        protocol=pickle.HIGHEST_PROTOCOL
+    )
 
 
 def save_results(
@@ -49,7 +53,11 @@ def save_results(
         dict_results: Dictionary of resulting data from correlator prediction
         path: Path to directory in which to save results
     """
-    pickle.dump(dict_results, open(path + '.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(
+        dict_results, 
+        open(path + '.pkl', 'wb'), 
+        protocol=pickle.HIGHEST_PROTOCOL
+    )
 
 
 def save_plot(
@@ -66,8 +74,9 @@ def save_plot(
     """
     Args:
         fig: matplotlib figure object
-        path: str, the path where the figure is saved, ending with ``/``.
-        filename: str, the file name, not including the file type suffix, ending with no ``.``.
+        path: The path where the figure is saved, ending with ``/``.
+        filename: The file name, not including the file type suffix, ending 
+            with no ``.``.
     """
     if tight_layout:
         plt.tight_layout()

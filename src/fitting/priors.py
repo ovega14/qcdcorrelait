@@ -8,9 +8,9 @@ def make_prior(
     no: int
 ) -> dict[str, gv.GVar]:
     """
-    Constructs priors for a given file of correlator data to be used in fitting.
+    Constructs priors for a given file of correlator data to be used in fits.
 
-    *Note: Generally want to use a higher number of odd states than even states.
+    Note: Generally want to use a higher number of odd states than even states.
 
     Args:
         filename: The name of the subfile containing correlator data
@@ -18,7 +18,7 @@ def make_prior(
         no: Number of 'odd' or 'oscillating' states to include
     
     Returns:
-        Dictionary of fit parameters and their corresponding priors as Gvar objects.
+        Dictionary of fit parameters and their priors as Gvar objects.
     """
     # TODO: fix numbers of states for other mass combinations
     prior = gv.BufferDict()
@@ -48,5 +48,8 @@ def make_prior(
     elif filename.endswith('P5-P5_RW_RW_d_d_m0.843_m0.01555_p000'):
         prior[filename + ':dE'] = gv.gvar(['1.15(2)', '0.11(5)', '0.25(10)'])
         prior[filename + ':dEo'] = gv.gvar(['1.2(2)', '0.160(5)', '0.19(10)'])
+
+    else:
+        raise ValueError('Unknown file', filename)
 
     return prior

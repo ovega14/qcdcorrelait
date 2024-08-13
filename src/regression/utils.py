@@ -52,4 +52,3 @@ def l2_regularization(
     
     params_norm = [(p ** 2).sum() for (_, p) in model.named_parameters()]
     return coeff * sum(params_norm)
-
