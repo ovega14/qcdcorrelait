@@ -13,8 +13,8 @@ import sys
 sys.path.insert(0, '../src/')
 from utils import save_model, save_results, set_np_seed
 from processing.preprocessing import get_corrs, preprocess_data
-from inference.train import make_model, train_model
-from inference.inference import predict
+from regression.train import make_model, train_model
+from regression.inference import predict
 from analysis.analyze import analysis_pred
 from analysis.tabulate import FitParamsTable
 from analysis.plot import plot_fit_params

@@ -7,7 +7,7 @@ Fit = TypeVar('Fit')
 from .plot import *
 from .tabulate import FitParamsTable
 sys.path.insert(0, '../')
-from inference.ratio_method import RatioMethod
+from regression.ratio_method import RatioMethod
 from processing.preprocessing import tensor_to_avg_over_tsrc
 from fitting.fit import fit_corrs
 

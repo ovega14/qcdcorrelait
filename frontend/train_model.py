@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 
 import sys
 sys.path.insert(0, '../src/')
-from utils import save_plot, save_model
-from inference.torch_regressors import *
-from inference.utils import adjust_learning_rate, l2_regularization
+from utils import save_plot, save_model, set_np_seed
+from regression.torch_regressors import *
+from regression.utils import adjust_learning_rate, l2_regularization
 
 from typing import TypeVar, Union
 
@@ -232,11 +232,11 @@ def train_torch_network(
             
             diag_correlations.append(correlation[4, 191+4])
             off_diag_correlations.append(correlation[4, 191+12])
-    correlations = np.array(correlations)  # [training_steps, num_tau*2, num_tau*2]
+    correlations = np.array(correlations)
     
     # Plot loss
     fig = plt.figure(figsize=(8., 6.))
-    plt.plot(losses, c='k')
+    plt.plot(losses, color='firebrick')
     plt.ylabel('Loss')
     plt.xlabel('Iterations')
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename='training_loss')
@@ -320,8 +320,13 @@ def train_sklearn_model(
 
 #==============================================================================
 def main(args):
-    model = make_model(args.reg_method, args.seed)
+    seed = args.seed
+    set_np_seed(seed)
+    torch.set_default_dtype(torch.float64)
+
     inputs, outputs = prepare_data(dict_data)
+    
+    model = make_model(args.reg_method, args.seed)
     if isinstance(model, torch.nn.Module):
         trained_model = train_torch_network(
             inputs, outputs,
@@ -358,3 +363,5 @@ if __name__ == '__main__':
         args_dict = copy.deepcopy(args.__dict__)
         args_dict['dict_hyperparams'] = json.loads(args.dict_hyperparams)
         json.dump(args_dict, f, indent=2)
+
+    main(args)
