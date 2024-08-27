@@ -85,10 +85,10 @@ class RatioMethod:
         """
         self._truncate_alpha()
         ratio = self.fit()
-        self.gv_dataset['hp_o_pred'] = self.gv_dataset['lp_o'] * ratio
+        self.gv_dataset['ratio_method_pred'] = self.gv_dataset['lp_o'] * ratio
         if self.boosted:
             boosted_ratio = (self.gv_dataset['hp_i'] / self.gv_dataset['lp_i']) ** self.alpha
             boosted_ratio = np.where(self.alpha != None, boosted_ratio, ratio)
-            self.gv_dataset['hp_o_pred_modified'] = self.gv_dataset['lp_o'] * boosted_ratio
+            self.gv_dataset['ratio_method_pred_modified'] = self.gv_dataset['lp_o'] * boosted_ratio
         return self.gv_dataset
         

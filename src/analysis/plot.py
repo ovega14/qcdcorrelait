@@ -97,8 +97,8 @@ def plot_correlators(
     if args.compare_ratio_method == 1:
         plt.errorbar(
             x = np.arange(0, num_tau),
-            y = gv.mean(ds_ratio_method['hp_o_pred']),
-            yerr = gv.sdev(ds_ratio_method['hp_o_pred']),
+            y = gv.mean(ds_ratio_method['ratio_method_pred']),
+            yerr = gv.sdev(ds_ratio_method['ratio_method_pred']),
             fmt='d', 
             ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'c',
@@ -107,8 +107,8 @@ def plot_correlators(
     if args.compare_ml_ratio_method == 1:
         plt.errorbar(
             x = np.arange(0, num_tau),
-            y = gv.mean(ds_ml_ratio_method['hp_o_pred']),
-            yerr = gv.sdev(ds_ml_ratio_method['hp_o_pred']),
+            y = gv.mean(ds_ml_ratio_method['ratio_method_pred']),
+            yerr = gv.sdev(ds_ml_ratio_method['ratio_method_pred']),
             fmt='d', 
             ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'm',
@@ -268,7 +268,7 @@ def plot_noise_to_signal(
     if args.compare_ratio_method == 1:
         plt.plot(
             np.arange(0, num_tau),
-            gv.sdev(ds_ratio_method['hp_o_pred']) / gv.mean(ds_ratio_method['hp_o_pred']),
+            gv.sdev(ds_ratio_method['ratio_method_pred']) / gv.mean(ds_ratio_method['ratio_method_pred']),
             c='c',
             linewidth=1.0,
             label='Pred Ratio Method',
@@ -277,7 +277,7 @@ def plot_noise_to_signal(
     if args.compare_ml_ratio_method == 1:
         plt.plot(
             np.arange(0, num_tau),
-            gv.sdev(ds_ml_ratio_method['hp_o_pred']) / gv.mean(ds_ml_ratio_method['hp_o_pred']),
+            gv.sdev(ds_ml_ratio_method['ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ratio_method_pred']),
             c='m',
             linewidth=0.9,
             label='Pred ML+Ratio Method',
@@ -342,7 +342,7 @@ def plot_normalized_noise_to_signal(
     if args.compare_ratio_method == 1:
         plt.plot(
             np.arange(0, num_tau),
-            gv.sdev(ds_ratio_method['hp_o_pred']) / gv.mean(ds_ratio_method['hp_o_pred'])/normalization_denominator,
+            gv.sdev(ds_ratio_method['ratio_method_pred']) / gv.mean(ds_ratio_method['ratio_method_pred'])/normalization_denominator,
             c='c',
             linewidth=1.0,
             label='Pred Ratio Method',
@@ -351,7 +351,7 @@ def plot_normalized_noise_to_signal(
     if args.compare_ml_ratio_method == 1:
         plt.plot(
             np.arange(0, num_tau),
-            gv.sdev(ds_ml_ratio_method['hp_o_pred']) / gv.mean(ds_ml_ratio_method['hp_o_pred'])/normalization_denominator,
+            gv.sdev(ds_ml_ratio_method['ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ratio_method_pred'])/normalization_denominator,
             c='m',
             linewidth=0.9,
             label='Pred ML+Ratio Method',
@@ -436,7 +436,7 @@ def plot_fit_params(tag, filename, dict_fits, args):
             axes[0, i].errorbar(x=j+1, y=a_pred[i].mean, yerr=a_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=1.0, label=f'{method}')
         if args.compare_ratio_method:
             for j, method in enumerate(reg_methods):
-                fit_rm = dict_fits[method]['hp_o_pred']
+                fit_rm = dict_fits[method]['ratio_method_pred']
                 a_rm = fit_rm.p[filename + ':a']
                 axes[0, i].errorbar(x=len(reg_methods)+j+1, y=a_rm[i].mean, yerr=a_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=1.0, label=f'RM + {method}')
         axes[0, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), a_truth[i].mean - a_truth[i].sdev, a_truth[i].mean + a_truth[i].sdev, color='limegreen', alpha=0.2)
@@ -452,7 +452,7 @@ def plot_fit_params(tag, filename, dict_fits, args):
             axes[1, i].errorbar(x=j+1, y=dE_pred[i].mean, yerr=dE_pred[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='^', ms=1.0, label=f'{method}')
         if args.compare_ratio_method:
             for j, method in enumerate(reg_methods):
-                fit_rm = dict_fits[method]['hp_o_pred']
+                fit_rm = dict_fits[method]['ratio_method_pred']
                 dE_rm = fit_rm.p[filename + ':dE']
                 axes[1, i].errorbar(x=len(reg_methods)+j+1, y=dE_rm[i].mean, yerr=dE_rm[i].sdev, linestyle='None', elinewidth=0.5, capsize=1.5, capthick=0.75, marker='s', ms=1.0, label=f'RM + {method}')
         axes[1, i].fill_between(np.linspace(-1, 2*len(reg_methods)+1, 20), dE_truth[i].mean - dE_truth[i].sdev, dE_truth[i].mean + dE_truth[i].sdev, color='limegreen', alpha=0.2)

@@ -250,10 +250,10 @@ def analysis_pred(
         with open(results_dir + '/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
                 if tag == 'ratio_method_pred':
-                    print(tag + ':\n', file=f)
+                    print('ml_ratio_method_pred:\n', file=f)
                     print(FitParamsTable.write_line('RM + ML', dict_fits, filename, tag), file=f)
                 elif tag == 'ratio_method_pred_modified':
-                    print(tag + ':\n', file=f)
+                    print('ml_ratio_method_pred_modified:\n', file=f)
                     print(FitParamsTable.write_line('bRM + ML', dict_fits, filename, tag), file=f)
                 else:
                     print(tag + ':\n', file=f)
