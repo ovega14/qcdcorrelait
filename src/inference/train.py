@@ -203,6 +203,7 @@ def train_model(
             plt.xlabel('Training Iterations')
             plt.legend()
             save_plot(fig=fig, path=f'{results_dir}/plots/', filename='off_diag_training_correlation')
+            plt.close(fig)
 
             # Save plots of correlation heatmaps over training time
             fig, axes = plt.subplots(1, 5, sharey=True, figsize=(20, 4.))
@@ -223,6 +224,16 @@ def train_model(
             plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
             plt.imshow(correlations[-1], cmap='hot')
             save_plot(fig=fig, path=f'{results_dir}/plots/', filename='final_correlation')
+
+            # plot rho(O(tau), O_pred(tau)) vs tau at end of training
+            fig = plt.figure(figsize=(8., 6.))
+            taus = list(range(192))
+            diag_corrs = np.diag(correlations[-1, :192, 192:])
+            plt.plot(taus, diag_corrs)
+            plt.hlines(1.0, 0, 192, color='black', linestyle='dashed')
+            plt.ylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau))$") 
+            plt.xlabel(r'Time Extent $\tau$')
+            save_plot(fig=fig, path=f'{results_dir}/plots/', filename='correlation_vs_tau_after_training')
         
     # Sklearn regressor training
     else:
