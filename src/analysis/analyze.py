@@ -53,7 +53,8 @@ def analysis_pred(
         corr_i = corr_i, 
         corr_o = corr_o, 
         lab_ind_list = args.train_ind_list + args.bc_ind_list,
-        boosted = args.modify_ratio
+        boosted = args.modify_ratio,
+        use_ml = False
     )
     ds_ratio_method = ratio_method.predict()
 
@@ -83,7 +84,8 @@ def analysis_pred(
         corr_i = corr_o_pred,
         corr_o = corr_o,
         lab_ind_list = args.train_ind_list + args.bc_ind_list,
-        boosted = args.modify_ratio
+        boosted = args.modify_ratio,
+        use_ml = True
     )
     ds_ml_ratio_method = ml_ratio_method.predict()
 
@@ -241,9 +243,9 @@ def analysis_pred(
         with open(results_dir + '/results/fits.txt', 'a') as f:
             for tag in dict_fits.keys():
                 if tag == 'ratio_method_pred':
-                    print("ml_ratio_method_pred", file=f)
+                    print(tag, file=f)
                 elif tag == 'ratio_method_pred_modified':
-                    print("ml_ratio_method_pred_modified", file=f)
+                    print(tag, file=f)
                 else:
                     print(tag, file=f)
                 print(dict_fits[tag], file=f)

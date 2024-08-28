@@ -107,8 +107,8 @@ def plot_correlators(
     if args.compare_ml_ratio_method == 1:
         plt.errorbar(
             x = np.arange(0, num_tau),
-            y = gv.mean(ds_ml_ratio_method['ratio_method_pred']),
-            yerr = gv.sdev(ds_ml_ratio_method['ratio_method_pred']),
+            y = gv.mean(ds_ml_ratio_method['ml_ratio_method_pred']),
+            yerr = gv.sdev(ds_ml_ratio_method['ml_ratio_method_pred']),
             fmt='d', 
             ms=1.5, capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'm',
@@ -277,7 +277,7 @@ def plot_noise_to_signal(
     if args.compare_ml_ratio_method == 1:
         plt.plot(
             np.arange(0, num_tau),
-            gv.sdev(ds_ml_ratio_method['ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ratio_method_pred']),
+            gv.sdev(ds_ml_ratio_method['ml_ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ml_ratio_method_pred']),
             c='m',
             linewidth=0.9,
             label='Pred ML+Ratio Method',
@@ -351,7 +351,7 @@ def plot_normalized_noise_to_signal(
     if args.compare_ml_ratio_method == 1:
         plt.plot(
             np.arange(0, num_tau),
-            gv.sdev(ds_ml_ratio_method['ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ratio_method_pred'])/normalization_denominator,
+            gv.sdev(ds_ml_ratio_method['ml_ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ml_ratio_method_pred'])/normalization_denominator,
             c='m',
             linewidth=0.9,
             label='Pred ML+Ratio Method',

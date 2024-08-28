@@ -19,6 +19,7 @@ class RatioMethod:
         corr_i: npt.NDArray,
         corr_o: npt.NDArray,
         lab_ind_list: List[int],
+        use_ml: bool,
         boosted: bool,
         alpha: Optional[npt.NDArray] = None
     ):
@@ -38,6 +39,11 @@ class RatioMethod:
 
         self.boosted = boosted
         self.alpha = alpha
+
+        if use_ml:
+            self.output_tag = 'ml_ratio_method_pred'
+        else:
+            self.output_tag = 'ratio_method_pred'
 
     def _truncate_alpha(
         self, 
@@ -85,10 +91,10 @@ class RatioMethod:
         """
         self._truncate_alpha()
         ratio = self.fit()
-        self.gv_dataset['ratio_method_pred'] = self.gv_dataset['lp_o'] * ratio
+        self.gv_dataset[self.output_tag] = self.gv_dataset['lp_o'] * ratio
         if self.boosted:
             boosted_ratio = (self.gv_dataset['hp_i'] / self.gv_dataset['lp_i']) ** self.alpha
             boosted_ratio = np.where(self.alpha != None, boosted_ratio, ratio)
-            self.gv_dataset['ratio_method_pred_modified'] = self.gv_dataset['lp_o'] * boosted_ratio
+            self.gv_dataset[self.output_tag + '_modified'] = self.gv_dataset['lp_o'] * boosted_ratio
         return self.gv_dataset
         
