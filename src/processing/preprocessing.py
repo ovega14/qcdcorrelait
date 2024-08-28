@@ -4,7 +4,9 @@ import gvar as gv
 import torch
 
 import numpy.typing as npt
-from typing import List, Tuple, Optional, TypeVar
+from typing import (
+    List, Tuple, Optional, TypeVar, Union
+)
 GVDataset = TypeVar('GVDataset')
 
 from .utils import tensor_means_stds_by_axis0
@@ -393,3 +395,39 @@ def tensor_to_avg_over_tsrc(
     """
     temp = tensor.T.reshape((n_tau, n_configs, -1)).numpy()
     return np.average(temp, axis=-1)
+
+
+# =============================================================================
+# LATTICE ROTATING
+# =============================================================================
+def rotate_sourcetimes(
+    corrs: Union[torch.Tensor, npt.NDArray],
+    shift: int,
+    num_tsrc: Optional[int] = 24
+) -> Union[torch.Tensor, npt.NDArray]:
+    """
+    Rotates the lattice of correlators to reduce autocorrelations across the 
+    source times.
+
+    Chooses a value `shift` that is ideally relatively prime to the total
+    number of source times. 
+
+    Note: Assumes that the data is shaped `[num_cfgs, num_tsrc, num_tau]`.
+
+    Args:
+        corrs: Correlator data
+        shift: Shift amount along source time axis
+        num_tsrc: Total number of source times in dataset
+
+    Returns:
+        A shuffled version of `corrs` where now the source times along each 
+    """
+    assert num_tsrc % shift != 0, \
+        'Shift should be relatively prime to num_tsrc'
+
+    corrs = corrs.permute(0, 2, 1)  # [configs, taus, tsrc]
+    
+    # Rotate across the lattice periodically
+    for i in range(1, num_tsrc):
+        corrs[:, :, i] = corrs[:, :, (i + shift) % num_tsrc ]
+    return corrs
