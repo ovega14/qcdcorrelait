@@ -3,7 +3,7 @@ import h5py
 import numpy as np
 
 import numpy.typing as npt
-from typing import List, Tuple, TypeVar
+from typing import Tuple, TypeVar
 GVDataset = TypeVar('GVDataset')
 
 from .conversion import tensor_data_by_ind_list
@@ -19,7 +19,7 @@ NUM_TSRC: int = 24  # 24 source times for our datasets.
 # =============================================================================
 #  DATA READING AND PREPROCESSING
 # =============================================================================
-def get_corrs(h5fname: str, corr_tags: List[str]) -> List[npt.NDArray]:
+def get_corrs(h5fname: str, corr_tags: list[str]) -> list[npt.NDArray]:
     """
     Retrieve correlator data from hdf5 cache. Order as (t, conf, tsrc).
 
@@ -47,9 +47,9 @@ def get_corrs(h5fname: str, corr_tags: List[str]) -> List[npt.NDArray]:
 def preprocess_data(
     corr_i: npt.NDArray,
     corr_o: npt.NDArray,
-    train_ind_list: List[int],
-    bc_ind_list: List[int],
-    unlab_ind_list: List[int]
+    train_ind_list: list[int],
+    bc_ind_list: list[int],
+    unlab_ind_list: list[int]
 ) -> dict[str, npt.NDArray]:
     """
     Preprocesses correlator dataset into a dictionary of input/output data, 
@@ -104,9 +104,9 @@ def preprocess_data(
 def prepare_input(
     corr_s: npt.NDArray,
     corr_l: npt.NDArray,
-    train_ind_list: List[int],
-    bc_ind_list: List[int],
-    unlab_ind_list: List[int],
+    train_ind_list: list[int],
+    bc_ind_list: list[int],
+    unlab_ind_list: list[int],
     t_extent: int
 ) -> Tuple[npt.NDArray, ...]:
     """
@@ -173,9 +173,9 @@ def prepare_input(
 def prepare_input_seq2seq(
     corr_s: npt.NDArray,
     corr_l: npt.NDArray,
-    train_ind_list: List[int],
-    bc_ind_list: List[int],
-    unlab_ind_list: List[int]
+    train_ind_list: list[int],
+    bc_ind_list: list[int],
+    unlab_ind_list: list[int]
 ) -> Tuple[npt.NDArray, ...]:
     """
     Prepares input data from normalized strange and light correlators for 
