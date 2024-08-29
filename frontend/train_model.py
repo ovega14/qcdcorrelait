@@ -40,7 +40,7 @@ SKLEARN_REGRESSORS: dict[str, SklearnRegressor] = {
     'Lasso': Lasso
 }
 
-NTAU = 192  # 192 time extents in our datasets
+NTAU: int = 192  # 192 time extents in our datasets
 
 
 #==============================================================================
