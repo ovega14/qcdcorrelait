@@ -7,7 +7,8 @@ TorchFunctional = TypeVar('TorchFunctional')
 
 class MLP(torch.nn.Module):
     """
-    Basic multilayer perceptron. Uses a combination of linear and batch norm layers.
+    Basic multilayer perceptron. Uses a combination of linear and batch norm 
+    layers.
 
     Args:
         input_dim: Number of features in input data
@@ -19,7 +20,8 @@ class MLP(torch.nn.Module):
     Attributes:
         depth: number of layers (including output layer) in the network
         fc_layers: ModuleList of fully connected layers
-        bn_layers: ModuleList of batch norm layers; identity if `batch_norm = False`
+        bn_layers: ModuleList of batch norm layers; identity if 
+            `batch_norm = False`
         activation: Activation function
     """
     def __init__(
@@ -32,7 +34,8 @@ class MLP(torch.nn.Module):
     ):
         super().__init__()
 
-        assert len(hidden_dims) > 0, 'Must specify dimensions for at least one hidden layer.'
+        assert len(hidden_dims) > 0, \
+            'Must specify dimensions for at least one hidden layer.'
         self.depth = len(hidden_dims) + 1
 
         # Fully connected (linear) layers
@@ -44,7 +47,9 @@ class MLP(torch.nn.Module):
 
         # (Optional) batch normalization layers
         if batch_norm:
-            bn_layers = [torch.nn.BatchNorm1d(hidden_dims[i]) for i in range(self.depth - 1)]
+            bn_layers = []
+            for i in range(self.depth - 1):
+                bn_layers.append(torch.nn.BatchNorm1d(hidden_dims[i]))
             bn_layers.append(torch.nn.BatchNorm1d(output_dim))
         else:
             bn_layers = [torch.nn.Identity()] * self.depth
@@ -65,12 +70,14 @@ class MLP(torch.nn.Module):
 
 class CNN(torch.nn.Module):
     """
-    Basic convolutional neural network. Uses a combination of 1d conv and batch norm layers
+    Basic convolutional neural network. Uses a combination of 1d convolutional 
+    and batch normalization layers
 
     Args:
         in_channels: Number of channels in input data
         out_channels: Number of channels in output data
-        hidden_channels: List of number of channels in data output from each hidden layer
+        hidden_channels: List of number of channels in data output from each 
+            hidden layer
         kernel_size: Size of the convolving kernel
         batch_norm: Whether to use batch normalization
         activation: Activation function used in the network
@@ -118,7 +125,9 @@ class CNN(torch.nn.Module):
         
         # (Optional) batch normalization layers
         if batch_norm:
-            bn_layers = [torch.nn.BatchNorm1d(hidden_channels[i]) for i in range(self.depth - 1)]
+            bn_layers = []
+            for i in range(self.depth - 1):
+                bn_layers.append(torch.nn.BatchNorm1d(hidden_channels[i]))
             bn_layers.append(torch.nn.BatchNorm1d(out_channels))
         else:
             bn_layers = [torch.nn.Identity()] * self.depth 
@@ -128,9 +137,9 @@ class CNN(torch.nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Feeds data through network and uses residual connections. For input to CNN, the data is
-        assumed to not possess a `channels` dimension, so the data is unsqueezed at dimension 1 and
-        then squeezed again at the output.        
+        Feeds data through network and uses residual connections. For input to 
+        CNN, the data is assumed to not possess a `channels` dimension, so the 
+        data is unsqueezed at dimension 1 and then squeezed again at output.        
         """
         x = torch.unsqueeze(x, dim=1)
         
@@ -184,7 +193,7 @@ class Transformer(torch.nn.Module):
     Args:
         input_dim: Number of features in the input data
         num_heads: Number of heads to use for multihead attention
-        dim_feedforward: Dimension of the feedforward in transformer encoder layers
+        dim_feedforward: Dimension of feedforward in transformer encoder layers
         batch_first: Whether batch dimension is first in data
         activation: Activation function to use in transformer encoder layers
     
