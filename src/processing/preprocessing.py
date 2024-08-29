@@ -420,7 +420,7 @@ def rotate_sourcetimes(
         num_tsrc: Total number of source times in dataset
 
     Returns:
-        A shuffled version of `corrs` where now the source times along each 
+        A shuffled version of `corrs` where now the source times along each... 
     """
     assert num_tsrc % shift != 0, \
         'Shift should be relatively prime to num_tsrc'
@@ -430,4 +430,10 @@ def rotate_sourcetimes(
     # Rotate across the lattice periodically
     for i in range(1, num_tsrc):
         corrs[:, :, i] = corrs[:, :, (i + shift) % num_tsrc ]
-    return corrs
+    return 
+    
+def _test_rotate_timesources():
+    raise NotImplementedError()
+
+
+if __name__ == '__main__':  _test_rotate_timesources()
