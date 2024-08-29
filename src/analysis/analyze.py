@@ -1,5 +1,4 @@
 import numpy as np
-import gvar as gv
 import numpy.typing as npt
 from typing import List, Any, TypeVar
 Fit = TypeVar('Fit')
@@ -8,7 +7,7 @@ from .plot import *
 from .tabulate import FitParamsTable
 sys.path.insert(0, '../')
 from regression.ratio_method import RatioMethod
-from processing.preprocessing import tensor_to_avg_over_tsrc
+from processing.conversion import tensor_to_avg_over_tsrc
 from fitting.fit import fit_corrs
 
 

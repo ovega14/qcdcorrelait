@@ -13,25 +13,26 @@ from .normalization import (
 )
 
 
-NUM_TSRC: int = 24  # 24 source times for our datasets.
-
-
 # =============================================================================
 #  DATA READING AND PREPROCESSING
 # =============================================================================
-def get_corrs(h5fname: str, corr_tags: list[str]) -> list[npt.NDArray]:
+def get_corrs(
+    h5fname: str, 
+    corr_tags: list[str],
+    num_tsrc: int
+) -> list[npt.NDArray]:
     """
     Retrieve correlator data from hdf5 cache. Order as (t, conf, tsrc).
 
     Args:
         h5fname: str, name/location of the hdf5 cache.
         corr_tags: correlator names
+        num_tsrc: Number of source times in dataset
 
     Returns:
         List of reshaped correlators corresponding to corr_tags.
     """
     data = h5py.File(h5fname)['data']
-    global NUM_TSRC
     
     result = []
     for tag in corr_tags:
@@ -39,7 +40,7 @@ def get_corrs(h5fname: str, corr_tags: list[str]) -> list[npt.NDArray]:
         np_container = np.zeros(corr_flat.shape)
         corr_flat.read_direct(np_container)
         corr = np_container.transpose()
-        corr = corr.reshape((corr_flat.shape[-1], -1, NUM_TSRC))
+        corr = corr.reshape((corr_flat.shape[-1], -1, num_tsrc))
         result.append(corr)
     return result
 

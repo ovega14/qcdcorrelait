@@ -10,13 +10,17 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 import argparse
 import json
 import copy
-import matplotlib.pyplot as plt
 
 import sys
 sys.path.insert(0, '../src/')
-from utils import save_plot, save_model, set_np_seed
+from utils import save_model, set_np_seed
+from processing.io_utils import get_corrs, preprocess_data
 from regression.torch_regressors import *
-from regression.plotting import plot_loss
+from regression.plotting import (
+    plot_loss,
+    plot_diag_correlations, plot_off_diag_correlations,
+    plot_correlation_heatmaps, plot_final_correlation_heatmap
+)
 from regression.utils import adjust_learning_rate, l2_regularization
 
 from typing import TypeVar, Union
@@ -25,6 +29,7 @@ TorchRegressor = TypeVar('TorchRegressor')
 SklearnRegressor = TypeVar('SklearnRegressor')
 
 
+# =============================================================================
 TORCH_REGRESSORS: dict[str, TorchRegressor] = {
     'Linear': LinearModel,
     'MLP': MLP,
@@ -41,18 +46,25 @@ SKLEARN_REGRESSORS: dict[str, SklearnRegressor] = {
     'Lasso': Lasso
 }
 
-NTAU: int = 192  # 192 time extents in our datasets
+NCFG: int = 1028
+NTAU: int = 192
+NSRC: int = 24
+
+if __name__ == '__main__':
+    print('Number of time extents:', NTAU)
+    print('Number of source times:', NSRC)
+    print('Number of configurations:', NCFG)
 
 
-#==============================================================================
-# DATA PREPARATION
-#==============================================================================
+# =============================================================================
+#  DATA PREPARATION
+# =============================================================================
 def prepare_data(
     dict_data: dict[str, torch.Tensor]
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
-    Prepares the standardized two-point strange (input) and light (output)
-    correlator data for input to a model for training.
+    Standardizes the two-point strange (input) and light (output) correlator 
+    data for input to a model for training.
 
     Args:
         dict_data: Dictionary of pre-processed correlator data
@@ -73,9 +85,9 @@ def prepare_data(
     return corr_2pt_s_train, corr_2pt_l_train
 
 
-#==============================================================================
-# MODEL PREPARATION
-#==============================================================================
+# =============================================================================
+#  MODEL PREPARATION
+# =============================================================================
 def make_model(
     reg_method: str,
     seed: int
@@ -148,9 +160,9 @@ def make_model(
     return model
         
     
-#==============================================================================
-# MODEL TRAINING
-#==============================================================================
+# =============================================================================
+#  MODEL TRAINING
+# =============================================================================
 def loss_func(
     prediction: torch.Tensor, 
     target: torch.Tensor,
@@ -186,7 +198,7 @@ def train_torch_network(
     track_corrs: bool
 ) -> TorchRegressor:
     """
-    Trains the model.
+    Trains the neural network.
     
     For neural networks implemented via PyTorch, training is done according to 
     MSE loss with :math:`\ell^2` regularization. The training loss curve is 
@@ -238,45 +250,13 @@ def train_torch_network(
     # Plot loss
     plot_loss(losses, results_dir)
 
+    # Visualize correlations
     if track_corrs:
-        fig = plt.figure(figsize=(8., 6.))
-        for tau in range(1, 6):
-            plt.plot(correlations[:, tau, 191 + tau], label=rf'$\tau={tau}$')
-        plt.hlines(1.0, 0, training_steps, color='black', linestyle='dashed')
-        plt.ylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau))$")
-        plt.xlabel('Training Iterations')
-        plt.legend()
-        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='diag_training_correlation')
-
-        fig = plt.figure(figsize=(8., 6.))
-        for tau in range(1, 20):
-            plt.plot(correlations[:, tau, 191 + 12], label=rf'$\tau={tau}$')
-            plt.plot(correlations[:, 191 + tau, 191 + 12], label=rf'Truth, $\tau={tau}$', linestyle='dashed')
-        #plt.plot(correlations[:, 191 + 12, 191 + tau], c='k')
-        plt.ylabel(r"$\rho(O(\tau'=12), O^{\mathrm{pred}}(\tau))$")
-        plt.xlabel('Training Iterations')
-        plt.legend()
-        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='off_diag_training_correlation')
-
-        # Save plots of correlation heatmaps over training time
-        fig, axes = plt.subplots(1, 5, sharey=True, figsize=(20, 4.))
-        fig.supylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
-        for i in range(4):
-            ax = axes[i]
-            im = ax.imshow(correlations[50*i], cmap='hot')
-            im.norm.autoscale([0, 1])
-            ax.set_xlabel(f'Iter {50*i}')
-        im = axes[-1].imshow(correlations[-1], cmap='hot')
-        im.norm.autoscale([0, 1])
-        axes[-1].set_xlabel(f'Iter {len(losses)}')
-        #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
-        #fig.colorbar(im, cax=cbar_ax)
-        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='correlation_heatmaps')
-
-        fig = plt.figure(figsize=(8., 8.))
-        plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
-        plt.imshow(correlations[-1], cmap='hot')
-        save_plot(fig=fig, path=f'{results_dir}/plots/', filename='final_correlation')
+        plot_diag_correlations(correlations, results_dir)
+        plot_off_diag_correlations(correlations, results_dir)
+        plot_correlation_heatmaps(correlations, results_dir)
+        plot_final_correlation_heatmap(correlations, results_dir)
+    
     return model
 
 
@@ -286,9 +266,9 @@ def train_sklearn_model(
     model: Union[SklearnRegressor, list[SklearnRegressor]],
 ) -> Union[SklearnRegressor, list[SklearnRegressor]]:
     """
-    Trains the model.
+    Trains the SkLearn model.
 
-    For the SkLearn models, training is done natively; however, for the 
+    For SkLearn models, training is done natively; however, for the 
     gradient-boosted trees, an ensemble is trained iteratively, yielding a 
     list of models for each euclidean time extent.
 
@@ -315,12 +295,39 @@ def train_sklearn_model(
     return model
 
 
-#==============================================================================
+# =============================================================================
 def main(args):
     seed = args.seed
     set_np_seed(seed)
     torch.set_default_dtype(torch.float64)
 
+    global NSRC
+    corr_i, corr_o = get_corrs(
+        args.hdf5_filename,
+        [args.input_dataname, args.output_dataname],
+        NSRC
+    )
+
+    num_tau, num_cfgs, num_tsrc = corr_i.shape
+    print('num_tau =', num_tau)
+    print('num_cfgs =', num_cfgs)
+    print('num_tsrc =', num_tsrc)
+
+    train_ind_list = args.train_ind_list
+    bc_ind_list = args.bc_ind_list
+    labeled_ind_list = np.sort(train_ind_list + bc_ind_list).tolist()
+    
+    unlab_ind_list = []
+    for i in range(num_tsrc):
+        if i not in labeled_ind_list:
+            unlab_ind_list.append(i)
+    
+    dict_data = preprocess_data(
+        corr_i, corr_o,
+        train_ind_list,
+        bc_ind_list,
+        unlab_ind_list
+    )
     inputs, outputs = prepare_data(dict_data)
     
     model = make_model(args.reg_method, args.seed)
@@ -347,6 +354,8 @@ if __name__ == '__main__':
     add = parser.add_argument
 
     add('--seed', type=int, default=42)
+    add('--train_ind_list', type=str, default=[0])
+    add('--bc_ind_list', type=str, default=[3, 6, 12, 15, 18])
     add('--reg_method', type=str, default='MLP')
     add('--lr', type=float, default=0.01)
     add('--l2_coeff', type=float, default=1e-2)
@@ -356,7 +365,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    with open(args.results_dir+'/data/commandline_args.dat', 'w') as f:
+    with open(args.results_dir + '/data/commandline_args.dat', 'w') as f:
         args_dict = copy.deepcopy(args.__dict__)
         args_dict['dict_hyperparams'] = json.loads(args.dict_hyperparams)
         json.dump(args_dict, f, indent=2)
