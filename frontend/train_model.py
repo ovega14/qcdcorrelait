@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, '../src/')
 from utils import save_plot, save_model, set_np_seed
 from regression.torch_regressors import *
+from regression.plotting import plot_loss
 from regression.utils import adjust_learning_rate, l2_regularization
 
 from typing import TypeVar, Union
@@ -235,11 +236,7 @@ def train_torch_network(
     correlations = np.array(correlations)
     
     # Plot loss
-    fig = plt.figure(figsize=(8., 6.))
-    plt.plot(losses, color='firebrick')
-    plt.ylabel('Loss')
-    plt.xlabel('Iterations')
-    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='training_loss')
+    plot_loss(losses, results_dir)
 
     if track_corrs:
         fig = plt.figure(figsize=(8., 6.))
