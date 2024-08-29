@@ -1,12 +1,17 @@
+#!/usr/bin/env python3
+import torch
 import gvar as gv
+import argparse
+
+import sys
+sys.path.insert('../')
+from utils import load_model, set_np_seed
 
 
-def make_prior(
-    filename: str,
-    *,
-    ne: int,
-    no: int
-) -> dict[str, gv.GVar]:
+# =============================================================================
+#  SETTING PRIORS
+# =============================================================================
+def make_prior(filename: str, *, ne: int, no: int) -> dict[str, gv.GVar]:
     """
     Constructs priors for a given file of correlator data to be used in fits.
 
@@ -20,6 +25,7 @@ def make_prior(
     Returns:
         Dictionary of fit parameters and their priors as Gvar objects.
     """
+    # TODO: Make this concrete and less naive
     # TODO: fix numbers of states for other mass combinations
     prior = gv.BufferDict()
 
@@ -53,3 +59,20 @@ def make_prior(
         raise ValueError('Unknown file', filename)
 
     return prior
+
+
+# =============================================================================
+def main(args):
+    seed = args.seed
+    set_np_seed(seed)
+    torch.set_default_dtype(torch.float64)
+
+    model = load_model(args.results_dir + '/model')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    add = parser.add_argument
+
+    add('--seed', type=int, default=42)
+    add('--results_dir', type=str)

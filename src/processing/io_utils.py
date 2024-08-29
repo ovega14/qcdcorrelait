@@ -30,7 +30,7 @@ def get_corrs(
         num_tsrc: Number of source times in dataset
 
     Returns:
-        List of reshaped correlators corresponding to corr_tags.
+        List of reshaped correlators corresponding to `corr_tags`.
     """
     data = h5py.File(h5fname)['data']
     
@@ -78,7 +78,7 @@ def preprocess_data(
     corr_i_unlab_tensor = tensor_data_by_ind_list(corr_i, unlab_ind_list)
     corr_o_unlab_tensor = tensor_data_by_ind_list(corr_o, unlab_ind_list)
 
-    # Compute means and stds of training data for normalization & denormalization
+    # Compute means, stds of training data for normalization & denormalization
     corr_i_train_means, corr_i_train_stds = tensor_means_stds_by_axis0(corr_i_train_tensor)
     corr_o_train_means, corr_o_train_stds = tensor_means_stds_by_axis0(corr_o_train_tensor)
 

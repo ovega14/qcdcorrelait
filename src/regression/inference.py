@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import argparse
 import copy
 import matplotlib.pyplot as plt
 
@@ -14,9 +13,9 @@ TorchRegressor = TypeVar('TorchRegressor')
 SklearnRegressor = TypeVar('SklearnRegressor')
 
 
-#===================================================================================================
-# PREDICTION
-#===================================================================================================
+# =============================================================================
+#  PREDICTION
+# =============================================================================
 def predict(
     n_corr_i_train_tensor: torch.Tensor,
     model: Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]],
@@ -24,10 +23,11 @@ def predict(
     dict_data: dict[str, torch.tensor]
 ) -> dict[str, torch.Tensor]:
     """
-    Uses the trained regressor to predict new output data from given input data.
+    Uses the trained regressor to infer new output data from given input data.
 
     Args:
-        n_corr_i_train_tensor: The unlabeled input correlator data from which to predict
+        n_corr_i_train_tensor: The unlabeled input correlator data from which 
+            to predict
         model: A trained regressor
         reg_method: Name of regression method being used
         dict_data: Dictionary of preprocessed data

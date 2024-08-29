@@ -8,9 +8,9 @@ from typing import TypeVar
 Regressor = TypeVar('Regressor')
 
 
-#==============================================================================
-# SEEDING
-#==============================================================================
+# =============================================================================
+#  SEEDING
+# =============================================================================
 def set_np_seed(seed: int) -> None:
     """
     Sets the `numpy` random seed.
@@ -22,9 +22,9 @@ def set_np_seed(seed: int) -> None:
     np.random.seed(seed)
 
 
-#==============================================================================
-# SAVE DATA
-#==============================================================================
+# =============================================================================
+#  MODEL I/O UTILS
+# =============================================================================
 def save_model(
     model: Regressor,
     path: str
@@ -34,6 +34,7 @@ def save_model(
     
     Args: 
         model: A trained Regressor object, either from PyTorch or Sklearn
+        path: Name of the directory in which to store the model
     """
     pickle.dump(
         model, 
@@ -42,24 +43,63 @@ def save_model(
     )
 
 
-def save_results(
-    dict_results: dict[str, npt.NDArray], 
+def load_model(
+    path: str
+) -> Regressor:
+    """
+    Loads a trained model back into memory for usage, i.e. inference. Assumes
+    that the model is saved in a file 'path/model.pkl'. 
+
+    Args:
+        path: Name of the directory in which the model is stored
+
+    Returns:
+        A trained regressor
+    """
+    with open(f'{path}/model.pkl', 'rb') as f:
+        model = pickle.load(f)
+    return model
+
+
+# =============================================================================
+#  DATASET I/O UTILS
+# =============================================================================
+def save_data(
+    data_dict: dict[str, npt.NDArray], 
     path: str
 ) -> None:
     """
-    Saves the results of the fit on correlator data.
+    Saves a dictionary of correlator data.
     
     Args:
-        dict_results: Dictionary of resulting data from correlator prediction
-        path: Path to directory in which to save results
+        data_dict: Dictionary of correlator data
+        path: Path to directory in which to save data
     """
     pickle.dump(
-        dict_results, 
+        data_dict, 
         open(path + '.pkl', 'wb'), 
         protocol=pickle.HIGHEST_PROTOCOL
     )
 
 
+def load_data(path: str) -> dict[str, npt.NDArray]:
+    """
+    Loads into memory a dictionary of correlator data.
+
+    Args:
+        path: Name of the directory where the data is stored
+
+    Returns:
+        A dictionary of correlator data
+    """
+    with open(path + '.pkl', 'rb') as f:
+        data_dict = pickle.load(f)
+    return data_dict
+
+
+# =============================================================================
+#  SAVING PLOTS
+# =============================================================================
 def save_plot(
     fig,
     path='./',

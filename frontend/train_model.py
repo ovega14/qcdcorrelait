@@ -13,7 +13,7 @@ import copy
 
 import sys
 sys.path.insert(0, '../src/')
-from utils import save_model, set_np_seed
+from utils import set_np_seed, save_model, save_data
 from processing.io_utils import get_corrs, preprocess_data
 from regression.torch_regressors import *
 from regression.plotting import (
@@ -51,9 +51,10 @@ NTAU: int = 192
 NSRC: int = 24
 
 if __name__ == '__main__':
-    print('Number of time extents:', NTAU)
-    print('Number of source times:', NSRC)
-    print('Number of configurations:', NCFG)
+    print('TRAINING ML MODEL \n data dimensions:')
+    print('\t Number of time extents:', NTAU)
+    print('\t Number of source times:', NSRC)
+    print('\t Number of configurations:', NCFG)
 
 
 # =============================================================================
@@ -220,8 +221,6 @@ def train_torch_network(
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     losses = []
     correlations = []
-    diag_correlations = []
-    off_diag_correlations = []
 
     for i in range(training_steps):
         lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
@@ -242,9 +241,6 @@ def train_torch_network(
             truth = output_data.detach().numpy()
             correlation = np.corrcoef(prediction, truth, rowvar=False)
             correlations.append(correlation)
-            
-            diag_correlations.append(correlation[4, 191+4])
-            off_diag_correlations.append(correlation[4, 191+12])
     correlations = np.array(correlations)
     
     # Plot loss
@@ -328,6 +324,7 @@ def main(args):
         bc_ind_list,
         unlab_ind_list
     )
+    save_data(dict_data, path=args.results_dir + '/dict_data')
     inputs, outputs = prepare_data(dict_data)
     
     model = make_model(args.reg_method, args.seed)
