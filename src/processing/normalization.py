@@ -18,9 +18,8 @@ def normalize_1d(corr: npt.NDArray) -> Tuple[npt.NDArray, npt.NDArray]:
 
     Args:
         corr: 2d numpy.array, correlator data. Order as (t, other).
-        The dimension ``other`` could be conf or tsrc.
-        This function itself does not need to specify the physical meaning of 
-            data dimensions.
+            The dimension ``other`` could be conf or tsrc. This function itself
+            does not need to specify the physical meaning of data dimensions.
 
     Returns:
         normalized_corr: 1d numpy.array, normalized correlator. Order as (t).
@@ -43,9 +42,8 @@ def normalize_2d(corr: npt.NDArray) -> Tuple[npt.NDArray, npt.NDArray]:
 
     Args:
         corr: 2d numpy.array, correlator data. Order as (t, other).
-            The dimension ``other`` could be conf or tsrc.
-            This function itself does not need to specify the physical meaning 
-                of data dimensions.
+            The dimension ``other`` could be conf or tsrc. This function itself 
+            does not need to specify the physical meaning of data dimensions.
 
     Returns:
         normalized_corr: 1d numpy.array, normalized correlator. Order as (t).
