@@ -3,7 +3,7 @@ import numpy.typing as npt
 from typing import List, Any, TypeVar
 Fit = TypeVar('Fit')
 
-from .plot import *
+from .plotting import *
 from .tabulate import FitParamsTable
 sys.path.insert(0, '../')
 from regression.ratio_method import RatioMethod
@@ -106,58 +106,7 @@ def analysis_pred(
     corr_o_labeled_truth = np.average(corr_o[:, :, args.train_ind_list + args.bc_ind_list], axis=-1)
 
     # MAKE PLOTS -----------------------------------------------------------------------------------
-    plot_correlators(
-        num_tau = num_tau,
-        corr_o_truth = corr_o_truth,
-        corr_o_train_truth = corr_o_train_truth,
-        corr_o_pred_corrected = corr_o_pred_corrected,
-        corr_o_pred_uncorrected = corr_o_pred_uncorrected,
-        ds_ratio_method = ds_ratio_method,
-        ds_ml_ratio_method = ds_ml_ratio_method,
-        results_dir = results_dir,
-        args = args
-    )
-
-    plot_relative_correlated_difference(
-        n_corr_o_unlab_vs_tau, 
-        n_corr_o_unlab_pred_vs_tau,
-        n_corr_o_bc_vs_tau,
-        n_corr_o_bc_pred_vs_tau,
-        results_dir = results_dir
-    )
-
-    plot_noise_to_signal(
-        num_tau = num_tau,
-        corr_o_truth = corr_o_truth,
-        corr_o_labeled_truth = corr_o_labeled_truth,
-        corr_o_pred_corrected = corr_o_pred_corrected,
-        corr_o_pred_uncorrected = corr_o_pred_uncorrected,
-        ds_ratio_method = ds_ratio_method,
-        ds_ml_ratio_method = ds_ml_ratio_method,
-        results_dir = results_dir,
-        args = args
-    )
-
-    plot_normalized_noise_to_signal(
-        num_tau = num_tau,
-        corr_o_truth = corr_o_truth,
-        corr_o_labeled_truth = corr_o_labeled_truth,
-        corr_o_pred_corrected = corr_o_pred_corrected,
-        corr_o_pred_uncorrected = corr_o_pred_uncorrected,
-        ds_ratio_method = ds_ratio_method,
-        ds_ml_ratio_method = ds_ml_ratio_method,
-        results_dir = results_dir,
-        args = args
-    )
-
-    plot_error_breakdown(
-        pred_corrected = corr_o_pred_corrected,
-        pred_uncorrected = corr_o_pred_uncorrected,
-        bias_correction = corr_o_bias_correction,
-        results_dir = results_dir,
-        fig_name = 'error_breakdown',
-        truth = corr_o_truth,
-    )
+    ## used to contain all those functions to plot
 
     # FIT CORRELATORS-------------------------------------------------------------------------------
     dict_orig_corrs = dict()

@@ -157,7 +157,7 @@ def make_model(
                 gbr_list.append(gbr)
             return gbr_list
     else:
-        raise NotImplementedError(f"Unknown regression method '{reg_method}'.")
+        raise KeyError(f"Unknown regression method '{reg_method}'.")
     return model
         
     

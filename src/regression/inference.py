@@ -16,6 +16,7 @@ SklearnRegressor = TypeVar('SklearnRegressor')
 # =============================================================================
 #  PREDICTION
 # =============================================================================
+@torch.no_grad()
 def predict(
     n_corr_i_train_tensor: torch.Tensor,
     model: Union[TorchRegressor, SklearnRegressor, List[SklearnRegressor]],
