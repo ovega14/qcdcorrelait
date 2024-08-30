@@ -1,3 +1,4 @@
+"""Script to train a regression model and save its trained parameters."""
 #!/usr/bin/env python3
 import torch
 import torch.nn.functional as F
@@ -293,8 +294,7 @@ def train_sklearn_model(
 
 # =============================================================================
 def main(args):
-    seed = args.seed
-    set_np_seed(seed)
+    set_np_seed(args.seed)
     torch.set_default_dtype(torch.float64)
 
     global NSRC
