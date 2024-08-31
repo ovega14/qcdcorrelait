@@ -38,8 +38,8 @@ def l2_regularization(
 
         \mathcal{L}_{\ell_2} := \lambda \sum_\theta \|\theta\|_2^2,
 
-    where :math:`\lambda` is the regularization coefficient `coeff` and :math:`\theta` are the
-    trainable parameters of the model.
+    where :math:`\lambda` is the regularization coefficient `coeff` and 
+    :math:`\theta` are the trainable parameters of the model.
 
     Args:
         coeff: Weighting coefficient of the regularization loss
@@ -48,7 +48,8 @@ def l2_regularization(
     Returns:
         Scalar value of regularization loss
     """
-    assert isinstance(model, torch.nn.Module), 'Model must be a torch.nn.Module object'
+    assert isinstance(model, torch.nn.Module), \
+        'Model must be a torch.nn.Module object'
     
     params_norm = [(p ** 2).sum() for (_, p) in model.named_parameters()]
     return coeff * sum(params_norm)
