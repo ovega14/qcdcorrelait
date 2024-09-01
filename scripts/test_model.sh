@@ -70,6 +70,8 @@ do
     python -W ignore infer_data.py \
         --seed $seed \
         --reg_method $reg_method \
+        --train_ind_list $train_ind_list \
+        --bc_ind_list $bc_ind_list\
         --modify_ratio $modify_ratio \
         --results_dir "../results/$name"
     python -W ignore fit_corrs.py \

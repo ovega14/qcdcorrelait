@@ -9,7 +9,7 @@ from typing import Any
 import sys
 sys.path.insert('../src/')
 from utils import set_np_seed, save_data, load_data
-from fitting.fit import fit_corrs
+from analysis.fitting import fit_corrs
 from analysis.tabulation import FitParamsTable
 
 
