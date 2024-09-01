@@ -3,18 +3,26 @@ import torch
 import gvar as gv
 import argparse
 
+import numpy.typing as npt
 from typing import Any
 
 import sys
 sys.path.insert('../src/')
-from utils import load_model, set_np_seed, save_data, load_data
-from regression.inference import predict
+from utils import set_np_seed, save_data, load_data
+from fitting.fit import fit_corrs
+from analysis.tabulation import FitParamsTable
 
 
 # =============================================================================
 NCFG: int = 1028
 NTAU: int = 192
 NSRC: int = 24
+
+TAGS: list[str] = [
+    'corr_o_truth', 
+    'corr_o_pred_corrected', 
+    'corr_o_pred_uncorrected'
+]
 
 # CorrFit hyperparams
 NEVEN: int = 5
@@ -118,53 +126,115 @@ def make_opts(filename: str) -> dict[str, Any]:
         dict_opts[key] = val
     return dict_opts
 
-filename = dict_opts.get('filename')
-dict_fits = fit_corrs(dict_orig_corrs, dict_opts)
-all_dict_fits = dict_fits.copy()
+
+def _get_corrs_from_tags(
+    dict_data: dict[str, npt.NDArray],
+    tags: list[str]
+) -> dict[str, npt.NDArray]:
+    """Creates dict of correlator data using desired tags."""
+    corrs = dict((tag, dict_data[tag]) for tag in tags if tag in dict_data)
+    return corrs
 
 
 # =============================================================================
 def main(args):
-    seed = args.seed
-    set_np_seed(seed)
+    set_np_seed(args.seed)
     torch.set_default_dtype(torch.float64)
 
-    global NCFG, NSRC, NTAU
+    global NCFG, NSRC, NTAU, TAGS
 
-    model = load_model(args.results_dir + '/model')
     dict_data = load_data(args.results_dir + '/dict_data')
+    ds_ratio_method = load_data(args.results_dir + '/ds_ratio_method')
+    ds_ml_ratio_method = load_data(args.results_dir + '/ds_ml_ratio_method')
 
-    num = dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]
-    denom = dict_data["corr_i_train_stds"]
-    n_corr_i_train_tensor = num / denom
+    dict_orig_corrs = _get_corrs_from_tags(dict_data, TAGS)
+
+    filename = args.input_dataname + '_' + args.output_dataname
+    dict_opts = make_opts(filename)
+    dict_fits = fit_corrs(dict_orig_corrs, dict_opts)
+    all_dict_fits = dict_fits.copy()
+
+    # Write Results -----------------------------------------------------------
+    with open(args.results_dir + '/results/fits.txt', 'w') as f:
+        for tag in dict_fits.keys():
+            print(tag, file=f)
+            print(dict_fits[tag], file=f)
+    with open(args.results_dir + '/results/latex_table.txt', 'w') as f:
+        for tag in dict_fits.keys():
+            print(tag + ':\n', file=f)
+            print(FitParamsTable.write_line(
+                args.reg_method, dict_fits, filename, tag), file=f
+            )
+            print('=' * 120, file=f)
+
+    if args.compare_ratio_method == 1:
+        dict_fits = fit_corrs(
+            dict_corrs = None,
+            dict_opts = dict_opts,
+            gv_ds = ds_ratio_method,
+            excluding_tags=['hp_i', 'lp_i']
+        )
+        with open(args.results_dir + '/results/fits.txt', 'a') as f:
+            for tag in dict_fits.keys():
+                print(tag, file=f)
+                print(dict_fits[tag], file=f)
+        with open(args.results_dir + '/results/latex_table.txt', 'a') as f:
+            for tag in dict_fits.keys():
+                if tag == 'ratio_method_pred':
+                    print(tag + ':\n', file=f)
+                    print(FitParamsTable.write_line(
+                        'RM', dict_fits, filename, tag), file=f
+                    )
+                elif tag == 'ratio_method_pred_modified':
+                    print(tag + ':\n', file=f)
+                    print(FitParamsTable.write_line(
+                        'bRM', dict_fits, filename, tag), file=f
+                    )
+                else:
+                    print(tag + ':\n', file=f)
+                    print(FitParamsTable.write_line(
+                        args.reg_method, dict_fits, filename, tag), file=f
+                    )
+                print('=' * 120, file=f)
+        all_dict_fits.update(dict_fits)
     
-    dict_results = predict(
-        n_corr_i_train_tensor = n_corr_i_train_tensor,
-        model = model,
-        reg_method = args.reg_method,
-        dict_data = dict_data
-    )
-    if args.save_results == 1:
-        save_data(dict_results, path=args.results_dir + '/results')
+    if args.compare_ml_ratio_method == 1:
+        dict_fits = fit_corrs(
+            dict_corrs = None,
+            dict_opts = dict_opts,
+            gv_ds = ds_ml_ratio_method,
+            excluding_tags=['hp_o', 'hp_i', 'lp_i', 'lp_o']
+        )
+        with open(args.results_dir + '/results/fits.txt', 'a') as f:
+            for tag in dict_fits.keys():
+                if tag == 'ratio_method_pred':
+                    print("ml_ratio_method_pred", file=f)
+                elif tag == 'ratio_method_pred_modified':
+                    print("ml_ratio_method_pred_modified", file=f)
+                else:
+                    print(tag, file=f)
+                print(dict_fits[tag], file=f)
+        with open(args.results_dir + '/results/latex_table.txt', 'a') as f:
+            for tag in dict_fits.keys():
+                if tag == 'ratio_method_pred':
+                    print(tag + ':\n', file=f)
+                    print(FitParamsTable.write_line(
+                        'RM + ML', dict_fits, filename, tag), file=f
+                    )
+                elif tag == 'ratio_method_pred_modified':
+                    print(tag + ':\n', file=f)
+                    print(FitParamsTable.write_line(
+                        'bRM + ML', dict_fits, filename, tag), file=f
+                    )
+                else:
+                    print(tag + ':\n', file=f)
+                    print(FitParamsTable.write_line(
+                        args.reg_method, dict_fits, filename, tag), file=f
+                    )
+                print('=' * 120, file=f)
+        all_dict_fits.update(dict_fits)
 
-    dict_data["n_corr_o_train_tensor"] = (dict_data["corr_o_train_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
-
-    dict_data["n_corr_i_unlab_tensor"] = (dict_data["corr_i_unlab_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
-    dict_data["n_corr_o_unlab_tensor"] = (dict_data["corr_o_unlab_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
-
-    dict_data["n_corr_i_bc_tensor"] = (dict_data["corr_i_bc_tensor"] -  dict_data["corr_i_train_means"]) /  dict_data["corr_i_train_stds"]
-    dict_data["n_corr_o_bc_tensor"] = (dict_data["corr_o_bc_tensor"] -  dict_data["corr_o_train_means"]) /  dict_data["corr_o_train_stds"]
-
-    fits = analysis_pred(
-        corr_i, corr_o,
-        NTAU, NCFG, NSRC,
-        dict_data,
-        dict_results,
-        args.reg_method,
-        args.results_dir,
-        args
-    )
-    return fits
+    save_data(all_dict_fits, args.results_dir + '/all_dict_fits')
 
 
 if __name__ == '__main__':
@@ -173,5 +243,6 @@ if __name__ == '__main__':
 
     add('--seed', type=int, default=42)
     add('--reg_method', type=str, default='MLP')  # TODO: remove this arg
-    add('--save_results', type=bool, default=0)
+    add('--input_dataname', type=str)
+    add('--output_dataname', type=str)
     add('--results_dir', type=str)

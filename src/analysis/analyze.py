@@ -4,7 +4,7 @@ from typing import List, Any, TypeVar
 Fit = TypeVar('Fit')
 
 from .plotting import *
-from .tabulate import FitParamsTable
+from .tabulation import FitParamsTable
 sys.path.insert(0, '../')
 from regression.ratio_method import RatioMethod
 from processing.conversion import tensor_to_avg_over_tsrc

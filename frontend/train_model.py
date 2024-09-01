@@ -351,6 +351,8 @@ if __name__ == '__main__':
     add = parser.add_argument
 
     add('--seed', type=int, default=42)
+    add('--input_dataname', type=str)
+    add('--output_dataname', type=str)
     add('--train_ind_list', type=str, default=[0])
     add('--bc_ind_list', type=str, default=[3, 6, 12, 15, 18])
     add('--reg_method', type=str, default='MLP')

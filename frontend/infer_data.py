@@ -153,6 +153,10 @@ def main(args):
     corr_o_train_truth = np.average(corr_o[:, :, args.train_ind_list], axis=-1)
     corr_o_labeled_truth = np.average(corr_o[:, :, args.train_ind_list + args.bc_ind_list], axis=-1)
 
+    dict_data['corr_o_truth'] = corr_o_truth
+    dict_data['corr_o_pred_corrected'] = corr_o_pred_corrected
+    dict_data['corr_o_pred_uncorrected'] = corr_o_pred_uncorrected
+
     # Plot correlators & their statistics -------------------------------------
     plot_correlators(
         num_tau = NTAU,

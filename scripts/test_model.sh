@@ -3,12 +3,15 @@ export OMP_NUM_THREADS=1
 #ulimit -Sv 9000000
 seed=42
 num=0
+
+lr=0.01
+l2_coeff=1e-2
+training_steps=500
 track_corrs=1
-#dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
 
 train_ind_list="[0]"
 bc_ind_list="[3,6,12,15,18]"
-# respecify params here !!!
+
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
 reg_method="MLP"
@@ -57,9 +60,22 @@ do
         --input_dataname $input_dataname \
         --output_dataname $output_dataname \
         --reg_method $reg_method \
-        --dict_hyperparams $dict_hyperparams \
+        --lr $lr \
+        --l2_coeff $l2_coeff \
+        --training_steps $training_steps \
         --train_ind_list $train_ind_list \
         --bc_ind_list $bc_ind_list\
-        --results_dir "../results/$name"\
-        --track_corrs $track_corrs
+        --track_corrs $track_corrs \
+        --results_dir "../results/$name"
+    python -W ignore infer_data.py \
+        --seed $seed \
+        --reg_method $reg_method \
+        --modify_ratio $modify_ratio \
+        --results_dir "../results/$name"
+    python -W ignore fit_corrs.py \
+        --seed $seed \
+        --reg_method $reg_method \
+        --input_dataname $input_dataname \
+        --output_dataname $output_dataname \
+        --results_dir "../results/$name"
 done
