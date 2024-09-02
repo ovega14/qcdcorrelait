@@ -20,7 +20,8 @@ from regression.torch_regressors import *
 from regression.plotting import (
     plot_loss,
     plot_diag_correlations, plot_off_diag_correlations,
-    plot_correlation_heatmaps, plot_final_correlation_heatmap
+    plot_correlation_heatmaps, plot_final_correlation_heatmap,
+    plot_final_diag_correlations
 )
 from regression.utils import adjust_learning_rate, l2_regularization
 
@@ -253,6 +254,7 @@ def train_torch_network(
         plot_off_diag_correlations(correlations, results_dir)
         plot_correlation_heatmaps(correlations, results_dir)
         plot_final_correlation_heatmap(correlations, results_dir)
+        plot_final_diag_correlations(correlations, results_dir)
     
     return model
 
