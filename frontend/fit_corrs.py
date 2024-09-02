@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import torch
 import gvar as gv
+
 import argparse
+import copy
+import json
 
 import numpy.typing as npt
 from typing import Any
 
 import sys
-sys.path.insert('../src/')
+sys.path.insert(0, '../src/')
 from utils import set_np_seed, save_data, load_data
 from analysis.fitting import fit_corrs
 from analysis.tabulation import FitParamsTable
@@ -29,7 +32,7 @@ NEVEN: int = 5
 NODD: int = 5
 TPER: int = NTAU
 TMIN: int = 2
-TMAX: int = NTAU - TPER
+TMAX: int = NTAU - 2
 MAX_ITERS: int = 5_000
 AVG_TSRC: bool = False
 
@@ -151,7 +154,8 @@ def main(args):
 
     filename = args.input_dataname + '_' + args.output_dataname
     dict_opts = make_opts(filename)
-    dict_fits = fit_corrs(dict_orig_corrs, dict_opts)
+    prior = make_priors(filename, ne=NEVEN, no=NODD)
+    dict_fits = fit_corrs(dict_orig_corrs, dict_opts, prior)
     all_dict_fits = dict_fits.copy()
 
     # Write Results -----------------------------------------------------------
@@ -171,6 +175,7 @@ def main(args):
         dict_fits = fit_corrs(
             dict_corrs = None,
             dict_opts = dict_opts,
+            prior = prior,
             gv_ds = ds_ratio_method,
             excluding_tags=['hp_i', 'lp_i']
         )
@@ -202,6 +207,7 @@ def main(args):
         dict_fits = fit_corrs(
             dict_corrs = None,
             dict_opts = dict_opts,
+            prior = prior,
             gv_ds = ds_ml_ratio_method,
             excluding_tags=['hp_o', 'hp_i', 'lp_i', 'lp_o']
         )
@@ -234,7 +240,7 @@ def main(args):
                 print('=' * 120, file=f)
         all_dict_fits.update(dict_fits)
 
-    save_data(all_dict_fits, args.results_dir + '/all_dict_fits')
+    #save_data(all_dict_fits, args.results_dir + '/all_dict_fits')
 
 
 if __name__ == '__main__':
@@ -243,6 +249,16 @@ if __name__ == '__main__':
 
     add('--seed', type=int, default=42)
     add('--reg_method', type=str, default='MLP')  # TODO: remove this arg
+    add('--compare_ratio_method', type=bool, default=1)
+    add('--compare_ml_ratio_method', type=bool, default=1)
     add('--input_dataname', type=str)
     add('--output_dataname', type=str)
     add('--results_dir', type=str)
+
+    args = parser.parse_args()
+    
+    with open(args.results_dir + '/data/commandline_args.dat', 'w') as f:
+        args_dict = copy.deepcopy(args.__dict__)
+        json.dump(args_dict, f, indent=2)
+
+    main(args)

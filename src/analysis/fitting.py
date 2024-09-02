@@ -58,7 +58,7 @@ def fit_corrs(
     dict_corrs: dict[str, npt.NDArray],
     dict_opts: dict[str, Any],
     prior: dict[str, gv.GVar],
-    gv_ds: GVDataset = None,
+    gv_ds: Optional[GVDataset] = None,
     excluding_tags: Optional[List[str]] = []
 ) -> dict[str, Fitter]:
     """

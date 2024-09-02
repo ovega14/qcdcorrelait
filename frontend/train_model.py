@@ -351,10 +351,12 @@ if __name__ == '__main__':
     add = parser.add_argument
 
     add('--seed', type=int, default=42)
+    add('--hdf5_filename', type=str, 
+        default='../data/l64192a_run2_810-6996_1028cfgs.hdf5')
     add('--input_dataname', type=str)
     add('--output_dataname', type=str)
-    add('--train_ind_list', type=str, default=[0])
-    add('--bc_ind_list', type=str, default=[3, 6, 12, 15, 18])
+    add('--train_ind_list', type=str, default='[0]')
+    add('--bc_ind_list', type=str, default='[3, 6, 12, 15, 18]')
     add('--reg_method', type=str, default='MLP')
     add('--lr', type=float, default=0.01)
     add('--l2_coeff', type=float, default=1e-2)
@@ -363,10 +365,13 @@ if __name__ == '__main__':
     add('--results_dir', type=str)
 
     args = parser.parse_args()
-
     with open(args.results_dir + '/data/commandline_args.dat', 'w') as f:
         args_dict = copy.deepcopy(args.__dict__)
-        args_dict['dict_hyperparams'] = json.loads(args.dict_hyperparams)
         json.dump(args_dict, f, indent=2)
 
+    args = vars(args)
+    for key in ['train_ind_list', 'bc_ind_list']:
+        if key in args.keys():
+            args[key] = eval(args[key])
+    args = argparse.Namespace(**args)
     main(args)

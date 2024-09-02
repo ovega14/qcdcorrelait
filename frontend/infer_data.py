@@ -5,6 +5,8 @@ import numpy as np
 import numpy.typing as npt
 
 import argparse
+import copy
+import json
 
 import sys
 sys.path.insert(0, '../src/')
@@ -38,7 +40,7 @@ def infer_ratio_method(
     *, 
     lab_ind_list: list[int], 
     boosted: bool
-) -> tuple[npt.NDarray, npt.NDArray]:
+) -> tuple[npt.NDArray, npt.NDArray]:
     # Get ratio method data
     ratio_method = RatioMethod(
         corr_i = corr_i, 
@@ -72,7 +74,8 @@ def main(args):
     # Pre-process -------------------------------------------------------------
     corr_i, corr_o = get_corrs(
         args.hdf5_filename,
-        [args.input_dataname, args.output_dataname]
+        [args.input_dataname, args.output_dataname],
+        NSRC
     )
 
     n_corr_i_train_tensor = (dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
@@ -132,7 +135,7 @@ def main(args):
     ds_ratio_method, ds_ml_ratio_method = infer_ratio_method(
         corr_i, corr_o, corr_o_pred, 
         lab_ind_list=lab_ind_list, 
-        boosed = args.modify_ratio)
+        boosted = args.modify_ratio)
     
     # Post-process ------------------------------------------------------------
     n_corr_o_unlab_vs_tau = tensor_to_avg_over_tsrc(n_corr_o_unlab_tensor, NTAU, NCFG)
@@ -223,8 +226,26 @@ if __name__ == '__main__':
     add = parser.add_argument
 
     add('--seed', type=int, default=42)
+    add('--hdf5_filename', type=str, 
+        default='../data/l64192a_run2_810-6996_1028cfgs.hdf5')
+    add('--input_dataname', type=str)
+    add('--output_dataname', type=str)
     add('--reg_method', type=str, default='MLP')
+    add('--compare_ratio_method', type=bool, default=1)
+    add('--compare_ml_ratio_method', type=bool, default=1)
+    add('--train_ind_list', type=str, default='[0]')
+    add('--bc_ind_list', type=str, default='[3, 6, 12, 15, 18]')
     add('--modify_ratio', type=bool, default=1)
     add('--results_dir', type=str)
 
     args = parser.parse_args()
+    with open(args.results_dir + '/data/commandline_args.dat', 'w') as f:
+        args_dict = copy.deepcopy(args.__dict__)
+        json.dump(args_dict, f, indent=2)
+
+    args = vars(args)
+    for key in ['train_ind_list', 'bc_ind_list']:
+        if key in args.keys():
+            args[key] = eval(args[key])
+    args = argparse.Namespace(**args)
+    main(args)

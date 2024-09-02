@@ -2,7 +2,9 @@
 import matplotlib.pyplot as plt
 import numpy.typing as npt
 
-from ..utils import save_plot
+import sys
+sys.path.insert(0, '../')
+from utils import save_plot
 
 
 # =============================================================================

@@ -7,7 +7,7 @@ import copy
 
 import sys
 sys.path.insert(0, '../')
-from processing.preprocessing import convert_to_gvars
+from processing.conversion import convert_to_gvars
 
 
 class RatioMethod:

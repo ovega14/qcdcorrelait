@@ -13,7 +13,7 @@ GVDataset = TypeVar('GVDataset')
 # =============================================================================
 def tensor_data_by_ind_list(
     raw_corr: npt.NDArray, 
-    ind_list: list[int]
+    ind_list: Optional[list[int]] = None
 ) -> torch.Tensor:
     """
     Converts a 3d numpy array `raw_corr` to a 2d torch tensor (partially 
@@ -27,6 +27,8 @@ def tensor_data_by_ind_list(
         Reshaped PyTorch tensor of `raw_corr` with source times filtered by 
         `ind_list`, shaped as `[num_cfgs * len(ind_list), num_tau]`.
     """
+    if ind_list is None:
+        ind_list = list(range(raw_corr.shape[-1]))
     raw_corr = torch.from_numpy(raw_corr[:, :, ind_list]).double()
     return torch.flatten(raw_corr, start_dim=1, end_dim=-1).T
 
