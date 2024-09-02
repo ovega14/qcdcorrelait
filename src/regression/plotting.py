@@ -1,5 +1,6 @@
 """Plotting functions for tracking quantities during model training."""
 import matplotlib.pyplot as plt
+import numpy as np
 import numpy.typing as npt
 
 import sys
@@ -106,7 +107,7 @@ def plot_correlation_heatmaps(
     im.norm.autoscale([0, 1])
     axes[-1].set_xlabel(f'Iter {len(correlations)}')
     #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
-    #fig.colorbar(im, cax=cbar_ax)
+    #fig.colorbar(im, cax=cbar_ax)  # TODO
     save_plot(fig=fig, path=f'{results_dir}/plots/', 
               filename='correlation_heatmaps')
 
@@ -115,9 +116,36 @@ def plot_final_correlation_heatmap(
     correlations: list[npt.NDArray],
     results_dir: str
 ) -> None:
+    """Plots the final heatmap of correlation matrix after training model."""
     fig = plt.figure(figsize=(8., 8.))
     plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
     plt.imshow(correlations[-1], cmap='hot')
     save_plot(fig=fig, path=f'{results_dir}/plots/', 
               filename='final_correlation')
+    
+
+def plot_final_diag_correlations(
+    correlations: list[npt.NDArray],
+    results_dir: str
+) -> None:
+    """
+    Plots the diagonal elements of the correlation matrix between predicted
+    and target correlator as a function of the time extent.
+
+    Args:
+        correlations: List of correlation matrices at each training step
+        results_dir: Name of directory in which to save plots
+    """
+    final_corr = correlations[-1]
+    num_tau = final_corr.shape[0] / 2
+    taus = list(range(num_tau))
+    diag_corrs = np.diag(final_corr[:num_tau, num_tau:])  # upper-right quad
+    
+    fig = plt.figure(figsize=(8., 6.))
+    plt.plot(taus, diag_corrs)
+    plt.hlines(1.0, 0, num_tau, color='black', linestyle='dashed')
+    plt.xlabel(r'Time extent, $\tau$')
+    plt.ylabel(r'$\rho(O(\tau), O^{\rm pred}(\tau))$')
+    save_plot(fig=fig, path=f'{results_dir}/plots/', 
+              filename='correlation_vs_tau_after_training')
     
