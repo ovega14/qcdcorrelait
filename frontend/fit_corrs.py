@@ -11,7 +11,7 @@ from typing import Any
 
 import sys
 sys.path.insert(0, '../src/')
-from utils import set_np_seed, save_data, load_data
+from utils import set_np_seed, load_data, set_plot_preferences
 from analysis.fitting import fit_corrs
 from analysis.tabulation import FitParamsTable
 
@@ -41,6 +41,8 @@ if __name__ == '__main__':
     print('\t Number of time extents:', NTAU)
     print('\t Number of source times:', NSRC)
     print('\t Number of configurations:', NCFG)
+
+    set_plot_preferences()
 
 
 # =============================================================================

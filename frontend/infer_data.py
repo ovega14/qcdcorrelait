@@ -21,13 +21,25 @@ from analysis.plotting import (
     plot_normalized_noise_to_signal,
     plot_error_breakdown
 )
-from utils import load_model, set_np_seed, save_data, load_data
+from utils import (
+    load_model, set_np_seed, 
+    save_data, load_data, 
+    set_plot_preferences
+)
 
 
 # =============================================================================
 NCFG: int = 1028
 NTAU: int = 192
 NSRC: int = 24
+
+if __name__ == '__main__':
+    print('INFERRING NEW CORRELATOR DATA \n data dimensions:')
+    print('\t Number of time extents:', NTAU)
+    print('\t Number of source times:', NSRC)
+    print('\t Number of configurations:', NCFG)
+
+    set_plot_preferences()
 
 
 # =============================================================================
