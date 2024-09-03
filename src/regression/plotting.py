@@ -1,7 +1,8 @@
 """Plotting functions for tracking quantities during model training."""
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+
+from typing import Optional
 import numpy.typing as npt
 
 import sys
@@ -32,54 +33,44 @@ def plot_loss(losses: list[int], results_dir: str) -> None:
 # =============================================================================
 #  CORRELATION COEFFICIENTS
 # =============================================================================
-def plot_diag_correlations(
+def plot_correlations(
     correlations: list[npt.NDArray], 
-    results_dir: str
+    results_dir: str,
+    *,
+    tau_1: int,
+    tau_2: Optional[int] = None
 ) -> None:
     """
-    Plots the diagonal elements of the correlation matrix between the predicted
-    and target correlator during training. 
+    Plots the element of the correlation matrix specified by the pair 
+    `(tau_1, tau_2)` between the predicted and target correlator during 
+    training. If no value of `tau_2` is provided, then defaults to the diagonal
+    element `(tau_1, tau_1)`. 
 
     Args:
         correlations: List of correlation matrices at each training step
         results_dir: Name of directory in which to save plots
+        tau_1: First lattice time at which to observe correlations
+        tau_2: Second lattice time at which to observe correlations
     """
     fig = plt.figure(figsize=(8., 6.))
     
-    training_steps = len(correlations)
-    for tau in range(1, 6):
-        plt.plot(correlations[:, tau, 191 + tau], label=rf'$\tau={tau}$')
-    plt.hlines(1.0, 0, training_steps, color='black', linestyle='dashed')
-    plt.ylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau))$")
-    
-    plt.xlabel('Training Iterations')
-    plt.legend()
-    save_plot(fig=fig, path=f'{results_dir}/plots/', 
-              filename='diag_training_correlation')
-    
+    num_tau = int(correlations[0].shape[1] / 2)
+    if tau_2 is None:
+        tau_2 = tau_1
 
-def plot_off_diag_correlations(
-    correlations: list[npt.NDArray],
-    results_dir: str
-) -> None:
-    """
-    Plots the off-diagonal elements of the correlation matrix between the 
-    predicted and target correlator during training. 
-
-    Args:
-        correlations: List of correlation matrices at each training step
-        results_dir: Name of directory in which to save plots
-    """
-    fig = plt.figure(figsize=(8., 6.))
-    for tau in range(1, 20):
-        plt.plot(correlations[:, tau, 191 + 12], label=rf'$\tau={tau}$')
-        plt.plot(correlations[:, 191 + tau, 191 + 12], 
-                 label=rf'Truth, $\tau={tau}$', linestyle='dashed')
-    plt.ylabel(r"$\rho(O(\tau'=12), O^{\mathrm{pred}}(\tau))$")
+    print('plot_correlations num_tau:', num_tau)
+    plt.plot(correlations[:, tau_1, num_tau - 1 + tau_2])
+    #plt.hlines(1.0, 0, len(correlations), color='black', linestyle='dashed')
+    plt.ylabel('Correlation Coefficient')
     plt.xlabel('Training Iterations')
-    plt.legend()
-    save_plot(fig=fig, path=f'{results_dir}/plots/', 
-              filename='off_diag_training_correlation')
+    title = r"$\rho(O(\tau={{{tau_1}}}), O^{{\rm pred}}(\tau'={{{tau_2}}}))$"
+    plt.title(title.format(tau_1=tau_1, tau_2=tau_2))
+    
+    if tau_2 != tau_1:
+        filename = 'off_diag_training_correlation'
+    else: 
+        filename = 'diag_training_correlation'
+    save_plot(fig=fig, path=f'{results_dir}/plots/', filename=filename)
     
 
 # =============================================================================

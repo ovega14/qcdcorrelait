@@ -19,7 +19,7 @@ from processing.io_utils import get_corrs, preprocess_data
 from regression.torch_regressors import *
 from regression.plotting import (
     plot_loss,
-    plot_diag_correlations, plot_off_diag_correlations,
+    plot_correlations,
     plot_correlation_heatmaps, plot_final_correlation_heatmap,
     plot_final_diag_correlations
 )
@@ -252,8 +252,8 @@ def train_torch_network(
 
     # Visualize correlations
     if track_corrs:
-        plot_diag_correlations(correlations, results_dir)
-        plot_off_diag_correlations(correlations, results_dir)
+        plot_correlations(correlations, results_dir, tau_1=4)
+        plot_correlations(correlations, results_dir, tau_1=4, tau_2=12)
         plot_correlation_heatmaps(correlations, results_dir)
         plot_final_correlation_heatmap(correlations, results_dir)
         plot_final_diag_correlations(correlations, results_dir)
