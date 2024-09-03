@@ -1,4 +1,5 @@
 """Plotting functions for tracking quantities during model training."""
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
@@ -137,7 +138,7 @@ def plot_final_diag_correlations(
         results_dir: Name of directory in which to save plots
     """
     final_corr = correlations[-1]
-    num_tau = final_corr.shape[0] / 2
+    num_tau = int(final_corr.shape[0] / 2)
     taus = list(range(num_tau))
     diag_corrs = np.diag(final_corr[:num_tau, num_tau:])  # upper-right quad
     

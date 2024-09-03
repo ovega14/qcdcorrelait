@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pickle
 
@@ -98,8 +99,20 @@ def load_data(path: str) -> dict[str, npt.NDArray]:
 
 
 # =============================================================================
-#  SAVING PLOTS
+#  PLOTS
 # =============================================================================
+def set_plot_preferences() -> None:
+    """Sets up plotting fonts, sizes, etc."""
+    plt.rc('text', usetex=True)
+    plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+    
+    font = {'weight' : 'normal',
+            'size'   : 18}
+    mpl.rc('font', **font)
+    
+    mpl.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'  # \text
+
+
 def save_plot(
     fig,
     path='./',

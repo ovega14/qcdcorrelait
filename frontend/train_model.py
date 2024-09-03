@@ -14,7 +14,7 @@ import copy
 
 import sys
 sys.path.insert(0, '../src/')
-from utils import set_np_seed, save_model, save_data
+from utils import set_np_seed, save_model, save_data, set_plot_preferences
 from processing.io_utils import get_corrs, preprocess_data
 from regression.torch_regressors import *
 from regression.plotting import (
@@ -57,6 +57,8 @@ if __name__ == '__main__':
     print('\t Number of time extents:', NTAU)
     print('\t Number of source times:', NSRC)
     print('\t Number of configurations:', NCFG)
+
+    set_plot_preferences()
 
 
 # =============================================================================
