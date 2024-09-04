@@ -101,8 +101,7 @@ def preprocess_data(
 
 def rotate_sourcetimes(
     corrs: npt.NDArray,
-    shift: int, 
-    num_tsrc: int
+    shift: int
 ) -> npt.NDArray:
     """
     Rotates the correlators across the source times for each time extent to 
@@ -112,7 +111,14 @@ def rotate_sourcetimes(
     temporal extent, and for each configuration, shift the source times by this
     number of lattice sites.
     """
-    raise NotImplementedError()
+    num_configs, num_src, _ = corrs.shape
+    assert num_src // shift != 1, \
+        f'Should use shift relatively prime to num_src = {num_src}'
+
+    for i in range(num_configs):
+        corrs[i, ...] = np.roll(corrs[i, ...], shift=shift, axis=1)
+    return corrs
+
 
 # =============================================================================
 #  MODEL INPUT PREPARATION
