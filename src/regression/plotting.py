@@ -58,7 +58,6 @@ def plot_correlations(
     if tau_2 is None:
         tau_2 = tau_1
 
-    print('plot_correlations num_tau:', num_tau)
     plt.plot(correlations[:, tau_1, num_tau - 1 + tau_2])
     #plt.hlines(1.0, 0, len(correlations), color='black', linestyle='dashed')
     plt.ylabel('Correlation Coefficient')
@@ -111,7 +110,11 @@ def plot_final_correlation_heatmap(
     """Plots the final heatmap of correlation matrix after training model."""
     fig = plt.figure(figsize=(8., 8.))
     plt.title(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
-    plt.imshow(correlations[-1], cmap='hot')
+
+    # Get just the upper right quadrant
+    num_tau = int(correlations[-1].shape[0] / 2)
+    final_corrs = correlations[-1][:num_tau, num_tau:]
+    plt.imshow(final_corrs, cmap='viridis')
     save_plot(fig=fig, path=f'{results_dir}/plots/', 
               filename='final_correlation')
     

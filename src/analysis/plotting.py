@@ -12,23 +12,9 @@ sys.path.insert(0, '../')
 from utils import save_plot
 
 
-#==============================================================================
-# PLOTTING PREFERENCES
-#==============================================================================
-plt.rc('text', usetex=True)
-plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-font = {
-    'weight' : 'normal', 
-    'size': 18
-}
-matplotlib.rc('font', **font)
-# for \text command
-matplotlib.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
-
-
-#==============================================================================
-# CORRELATORS
-#==============================================================================
+# =============================================================================
+#  CORRELATORS
+# =============================================================================
 def plot_correlators(
     num_tau: int,
     corr_o_truth: npt.NDArray,
@@ -213,7 +199,7 @@ def plot_relative_correlated_difference(
     plt.xlabel('Time extent')
     plt.ylabel('Rel. correlated diff.')
 
-    plt.legend()
+    plt.legend(frameon=False)
     save_plot(
         fig=fig, 
         path=f'{results_dir}/plots/', 

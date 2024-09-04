@@ -99,6 +99,21 @@ def preprocess_data(
     return dict_data
 
 
+def rotate_sourcetimes(
+    corrs: npt.NDArray,
+    shift: int, 
+    num_tsrc: int
+) -> npt.NDArray:
+    """
+    Rotates the correlators across the source times for each time extent to 
+    reduce autocorrelations.
+
+    Choose a value `shift` which is relatively prime to the total lattice
+    temporal extent, and for each configuration, shift the source times by this
+    number of lattice sites.
+    """
+    raise NotImplementedError()
+
 # =============================================================================
 #  MODEL INPUT PREPARATION
 # =============================================================================
