@@ -115,8 +115,8 @@ def rotate_sourcetimes(
     assert num_src // shift != 1, \
         f'Should use shift relatively prime to num_src = {num_src}'
 
-    for i in range(num_configs):
-        corrs[i, ...] = np.roll(corrs[i, ...], shift=shift, axis=1)
+    for i in range(1, num_configs):
+        corrs[i, ...] = np.roll(corrs[i-1, ...], shift=shift, axis=1)
     return corrs
 
 
