@@ -15,7 +15,7 @@ import copy
 import sys
 sys.path.insert(0, '../src/')
 from utils import set_np_seed, save_model, save_data, set_plot_preferences
-from processing.io_utils import get_corrs, preprocess_data
+from processing.io_utils import get_corrs, preprocess_data, rotate_sourcetimes
 from regression.torch_regressors import *
 from regression.plotting import (
     plot_loss,
@@ -308,6 +308,8 @@ def main(args):
         NSRC
     )
 
+    corr_i = rotate_sourcetimes(corr_i, shift=5)
+    #corr_o = rotate_sourcetimes(corr_o, shift=7)
     num_tau, num_cfgs, num_tsrc = corr_i.shape
     print('num_tau =', num_tau)
     print('num_cfgs =', num_cfgs)

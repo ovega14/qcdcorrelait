@@ -111,14 +111,14 @@ def rotate_sourcetimes(
     temporal extent, and for each configuration, shift the source times by this
     number of lattice sites.
 
-    Note: Assumes data is shaped as `[num_cfg, num_tau, num_src]`.
+    Note: Assumes data is shaped as `[num_tau, num_cfg, num_src]`.
     """
-    num_configs, num_src, _ = corrs.shape
+    _, num_cfgs, num_src = corrs.shape
     assert num_src // shift != 1, \
         f'Should use shift relatively prime to num_src = {num_src}'
 
-    for i in range(1, num_configs):
-        corrs[i, ...] = np.roll(corrs[i-1, ...], shift=shift, axis=2)
+    for i in range(1, num_cfgs):
+        corrs[:, i, :] = np.roll(corrs[:, i-1, :], shift=shift, axis=1)
     return corrs
 
 
