@@ -99,29 +99,6 @@ def preprocess_data(
     return dict_data
 
 
-def rotate_sourcetimes(
-    corrs: npt.NDArray,
-    shift: int
-) -> npt.NDArray:
-    """
-    Rotates the correlators across the source times for each time extent to 
-    reduce autocorrelations.
-
-    Choose a value `shift` which is relatively prime to the total lattice
-    temporal extent, and for each configuration, shift the source times by this
-    number of lattice sites.
-
-    Note: Assumes data is shaped as `[num_tau, num_cfg, num_src]`.
-    """
-    _, num_cfgs, num_src = corrs.shape
-    assert num_src // shift != 1, \
-        f'Should use shift relatively prime to num_src = {num_src}'
-
-    for i in range(1, num_cfgs):
-        corrs[:, i, :] = np.roll(corrs[:, i-1, :], shift=shift, axis=1)
-    return corrs
-
-
 # =============================================================================
 #  MODEL INPUT PREPARATION
 # =============================================================================
@@ -258,3 +235,27 @@ def prepare_input_seq2seq(
     norm_factors_Y = norm_factors_Y.flatten()
 
     return X_train, Y_train, X_bc, Y_bc, X_unlab, Y_unlab, norm_factors_X, norm_factors_Y
+
+
+def rotate_sourcetimes(
+    corrs: npt.NDArray,
+    shift: int
+) -> npt.NDArray:
+    """
+    Rotates the correlators across the source times for each time extent to 
+    reduce autocorrelations.
+
+    Choose a value `shift` which is relatively prime to the total lattice
+    temporal extent, and for each configuration, shift the source times by this
+    number of lattice sites.
+
+    Note: Assumes data is shaped as `[num_tau, num_cfg, num_src]`.
+    """
+    _, num_cfgs, num_src = corrs.shape
+    #assert num_src // shift != 0, \
+    #    f'Should use shift relatively prime to num_src = {num_src}'
+
+    new_corrs = np.copy(corrs)
+    for i in range(1, num_cfgs):
+        new_corrs[:, i, :] = np.roll(new_corrs[:, i, :], shift=i*shift, axis=1)
+    return new_corrs

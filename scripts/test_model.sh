@@ -10,7 +10,7 @@ l2_coeff=1e-2
 training_steps=200
 track_corrs=0
 
-train_ind_list="[0]"
+train_ind_list="[0]" #"[0,2,7,11,17,21]"
 bc_ind_list="[3,6,12,15,18]"
 
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )

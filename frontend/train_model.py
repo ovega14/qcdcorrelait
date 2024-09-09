@@ -308,8 +308,8 @@ def main(args):
         NSRC
     )
 
-    corr_i = rotate_sourcetimes(corr_i, shift=5)
-    #corr_o = rotate_sourcetimes(corr_o, shift=7)
+    corr_i = rotate_sourcetimes(corr_i, shift=7)
+    corr_o = rotate_sourcetimes(corr_o, shift=7)
     num_tau, num_cfgs, num_tsrc = corr_i.shape
     print('num_tau =', num_tau)
     print('num_cfgs =', num_cfgs)
