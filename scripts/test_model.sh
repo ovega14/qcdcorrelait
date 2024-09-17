@@ -90,5 +90,5 @@ do
         --input_dataname $input_dataname \
         --output_dataname $output_dataname \
         --results_dir "../results/$name"
-    rm ../results/$name/*.pkl
+    #rm ../results/$name/*.pkl
 done

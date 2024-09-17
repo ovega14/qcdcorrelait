@@ -238,9 +238,7 @@ def main(args):
                 print('=' * 120, file=f)
         all_dict_fits.update(dict_fits)
 
-    for key, value in all_dict_fits.items():
-        print(f"Key: {key}, Type: {type(value)}")
-    #save_data(all_dict_fits, args.results_dir + '/all_dict_fits')
+    save_data(all_dict_fits, args.results_dir + '/all_dict_fits')
 
 
 if __name__ == '__main__':

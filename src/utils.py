@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pickle
+import dill
 
 import numpy.typing as npt
 from typing import TypeVar
@@ -76,7 +77,7 @@ def save_data(
         data_dict: Dictionary of correlator data
         path: Path to directory in which to save data
     """
-    pickle.dump(
+    dill.dump(
         data_dict, 
         open(path + '.pkl', 'wb'), 
         protocol=pickle.HIGHEST_PROTOCOL
