@@ -12,13 +12,29 @@ from processing.conversion import convert_to_gvars
 
 class RatioMethod:
     """
-    Docs TODO
+    Ratio Estimator for inferring new correlator data.
+
+    Args:
+        corr_i: Input correlator data
+        corr_o: Target (labeled) correlator data
+        lab_ind_list: List of source time indices corresponding to labeled data
+        use_ml: Whether to augment the ratio estimator with ML predictions
+        boosted: Whether to use the 'boosted' ratio method
+        alpha: Boost parameter (exponent)
+
+    Attributes:
+        gv_dataset: `gvar` dataset object containing correlator data by tags
+        boosted: As above.
+        alpha: As above.
+        output_tag: Name used for inferred data. If `use_ml` is true, then the
+            name indicates ML was used. Otherwise, default tag is used.
     """
     def __init__(
         self,
         corr_i: npt.NDArray,
         corr_o: npt.NDArray,
         lab_ind_list: List[int],
+        use_ml: bool,
         boosted: bool,
         alpha: Optional[npt.NDArray] = None
     ):
@@ -38,6 +54,10 @@ class RatioMethod:
 
         self.boosted = boosted
         self.alpha = alpha
+
+        self.output_tag: str = 'ratio_method_pred'
+        if use_ml:
+            self.output_tag = 'ml_' + self.output_tag
 
     def _truncate_alpha(
         self, 
@@ -81,14 +101,14 @@ class RatioMethod:
         
     def predict(self):
         """
-        Computes the predicted output correlator using the ratio method estimator.
+        Computes the predicted output correlator using the ratio estimator.
         """
         self._truncate_alpha()
         ratio = self.fit()
-        self.gv_dataset['hp_o_pred'] = self.gv_dataset['lp_o'] * ratio
+        self.gv_dataset[self.output_tag] = self.gv_dataset['lp_o'] * ratio
         if self.boosted:
             boosted_ratio = (self.gv_dataset['hp_i'] / self.gv_dataset['lp_i']) ** self.alpha
             boosted_ratio = np.where(self.alpha != None, boosted_ratio, ratio)
-            self.gv_dataset['hp_o_pred_modified'] = self.gv_dataset['lp_o'] * boosted_ratio
+            self.gv_dataset[self.output_tag + '_modified'] = self.gv_dataset['lp_o'] * boosted_ratio
         return self.gv_dataset
         
