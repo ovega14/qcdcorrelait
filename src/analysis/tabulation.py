@@ -14,7 +14,8 @@ class Table:
 
 class FitParamsTable(Table):
     """
-    Table for comparing fit parameters across different ML models within the same regime.
+    Table for comparing fit parameters across different ML models within the 
+    same regime.
 
     Args:
         dict_fits:
@@ -49,20 +50,24 @@ class FitParamsTable(Table):
         num_states: Optional[int] = 2
     ) -> str:
         """
-        Writes a single line of a table in LaTeX comparing fit parameters across inference methods.
+        Writes a single line of a table in LaTeX comparing fit parameters 
+        across inference methods.
 
-        The table line shows the resulting fit parameters and fit qualities for the chosen 
-        regression method for the fits supplied to the function. Simply call this function and 
-        print its result inside of a file with write permissions to send the line of TeX code to 
-        the file.
+        The table line shows the resulting fit parameters and fit qualities 
+        for the chosen regression method for the fits supplied to the function. 
+        Simply call this function and print its result inside of a file with 
+        write permissions to send the line of TeX code to the file.
 
         Args:
             reg_method: Name of the regression method being used
-            dict_fits: Dictionary of `corfitter.CorrFitter` objects that have been fit to data
+            dict_fits: Dictionary of `corfitter.CorrFitter` objects that have 
+                been fit to data
             filename: Name of the specific file inside the fitters to examine
-            tag: Keyword for which regime to tabulate, e.g. `corr_o_pred_corrected`
+            tag: Keyword for which regime to tabulate, 
+                e.g. `corr_o_pred_corrected`
             outfile: Name of the file in which to print the text
-            num_states: Number of fit parameters to display, starting with the ground state
+            num_states: Number of fit parameters to display, starting with the 
+                ground state
         """
         fit = dict_fits[tag]
 

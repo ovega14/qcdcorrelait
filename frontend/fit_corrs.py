@@ -5,13 +5,14 @@ import gvar as gv
 import argparse
 import copy
 import json
+import pickle
 
 import numpy.typing as npt
 from typing import Any
 
 import sys
 sys.path.insert(0, '../src/')
-from utils import set_np_seed, load_data, set_plot_preferences
+from utils import set_np_seed, load_data, set_plot_preferences, save_data
 from analysis.fitting import fit_corrs
 from analysis.tabulation import FitParamsTable
 
@@ -237,6 +238,8 @@ def main(args):
                 print('=' * 120, file=f)
         all_dict_fits.update(dict_fits)
 
+    for key, value in all_dict_fits.items():
+        print(f"Key: {key}, Type: {type(value)}")
     #save_data(all_dict_fits, args.results_dir + '/all_dict_fits')
 
 
