@@ -215,21 +215,16 @@ def main(args):
         )
         with open(args.results_dir + '/results/fits.txt', 'a') as f:
             for tag in dict_fits.keys():
-                if tag == 'ratio_method_pred':
-                    print("ml_ratio_method_pred", file=f)
-                elif tag == 'ratio_method_pred_modified':
-                    print("ml_ratio_method_pred_modified", file=f)
-                else:
-                    print(tag, file=f)
+                print(tag, file=f)
                 print(dict_fits[tag], file=f)
         with open(args.results_dir + '/results/latex_table.txt', 'a') as f:
             for tag in dict_fits.keys():
-                if tag == 'ratio_method_pred':
+                if tag == 'ml_ratio_method_pred':
                     print(tag + ':\n', file=f)
                     print(FitParamsTable.write_line(
                         'RM + ML', dict_fits, filename, tag), file=f
                     )
-                elif tag == 'ratio_method_pred_modified':
+                elif tag == 'ml_ratio_method_pred_modified':
                     print(tag + ':\n', file=f)
                     print(FitParamsTable.write_line(
                         'bRM + ML', dict_fits, filename, tag), file=f
