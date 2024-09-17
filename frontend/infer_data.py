@@ -58,6 +58,7 @@ def infer_ratio_method(
         corr_i = corr_i, 
         corr_o = corr_o, 
         lab_ind_list = lab_ind_list,
+        use_ml = False,
         boosted = boosted
     )
     ds_ratio_method = ratio_method.predict()
@@ -66,6 +67,7 @@ def infer_ratio_method(
         corr_i = corr_o_pred,
         corr_o = corr_o,
         lab_ind_list = lab_ind_list,
+        use_ml = True,
         boosted = boosted
     )
     ds_ml_ratio_method = ml_ratio_method.predict()
@@ -147,7 +149,7 @@ def main(args):
     # Get & save ratio method data --------------------------------------------
     ds_ratio_method, ds_ml_ratio_method = infer_ratio_method(
         corr_i, corr_o, corr_o_pred, 
-        lab_ind_list=lab_ind_list, 
+        lab_ind_list = lab_ind_list, 
         boosted = args.modify_ratio)
     
     # Post-process ------------------------------------------------------------
