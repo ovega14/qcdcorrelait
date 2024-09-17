@@ -58,7 +58,9 @@ def plot_correlations(
     if tau_2 is None:
         tau_2 = tau_1
 
-    plt.plot(correlations[:, tau_1, num_tau - 1 + tau_2])
+    plt.plot(correlations[:, tau_1, num_tau - 1 + tau_2], ls='dashed')
+    plt.plot(correlations[:, num_tau - 1 + tau_1, num_tau - 1 + tau_2], 
+             ls='dashed')
     #plt.hlines(1.0, 0, len(correlations), color='black', linestyle='dashed')
     plt.ylabel('Correlation Coefficient')
     plt.xlabel('Training Iterations')

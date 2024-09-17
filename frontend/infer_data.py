@@ -123,6 +123,7 @@ def main(args):
     corr_o_train_pred = corr_o_train_pred_tensor.T.reshape((NTAU, NCFG, -1)).numpy()
     corr_o_bc_pred = corr_o_bc_pred_tensor.T.reshape((NTAU, NCFG, -1)).numpy()
     corr_o_unlab_pred = corr_o_unlab_pred_tensor.T.reshape((NTAU, NCFG, -1)).numpy()
+
     corr_o_pred = []
     curr_ind_train = 0
     curr_ind_bc = 0
@@ -173,6 +174,15 @@ def main(args):
     dict_data['corr_o_pred_uncorrected'] = corr_o_pred_uncorrected
 
     # Plot correlators & their statistics -------------------------------------
+    # Compute correlation b/w test and pred data
+    tau_1 = 4
+    tau_2 = 12
+    unlab_pred = np.average(corr_o_unlab_pred, axis=-1)
+    corr_mat = np.corrcoef(unlab_pred, corr_o_truth, rowvar=True)
+    print('corr_mat shape:', corr_mat.shape)  
+    rho = corr_mat[tau_1, NTAU - 1 + tau_2]
+    print('CORRELATION B/W TEST PREDICTED DATA AND TRUTH DATA:', rho)
+
     plot_correlators(
         num_tau = NTAU,
         corr_o_truth = corr_o_truth,
