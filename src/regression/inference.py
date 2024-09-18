@@ -96,9 +96,9 @@ def predict(
     return dict_results
 
 
-#===================================================================================================
-# VISUALIZATION OF FEATURE IMPORTANCE AND INTERPRETABILITY
-#===================================================================================================
+# =============================================================================
+#  VISUALIZATION OF FEATURE IMPORTANCE AND INTERPRETABILITY
+# =============================================================================
 def get_feature_importances(model: SklearnRegressor) -> None:
     feature_importances = model.feature_importances_
     
