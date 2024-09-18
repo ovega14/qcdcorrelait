@@ -56,10 +56,10 @@ do
         fi
     fi
     mkdir ../results/$name
-    mkdir ../results/$name/data
     for reg_method in "${reg_methods[@]}"
     do
         mkdir -p ../results/$name/$reg_method
+        mkdir ../results/$name/$reg_method/data
         mkdir ../results/$name/$reg_method/plots
         mkdir ../results/$name/$reg_method/model
         mkdir ../results/$name/$reg_method/results
@@ -74,7 +74,7 @@ do
             --train_ind_list $train_ind_list \
             --bc_ind_list $bc_ind_list\
             --track_corrs $track_corrs \
-            --results_dir "../results/$name"
+            --results_dir "../results/$name/$reg_method"
         python -W ignore ../frontend/infer_data.py \
             --seed $seed \
             --input_dataname $input_dataname \
@@ -85,7 +85,7 @@ do
             --modify_ratio $modify_ratio \
             --compare_ratio_method $compare_ratio_method \
             --compare_ml_ratio_method $compare_ml_ratio_method \
-            --results_dir "../results/$name"
+            --results_dir "../results/$name/$reg_method"
         python -W ignore ../frontend/fit_corrs.py \
             --seed $seed \
             --reg_method $reg_method \
@@ -93,12 +93,17 @@ do
             --compare_ml_ratio_method $compare_ml_ratio_method \
             --input_dataname $input_dataname \
             --output_dataname $output_dataname \
-            --results_dir "../results/$name"
+            --results_dir "../results/$name/$reg_method"
     done
     python -W ignore ../frontend/compare_models.py \
         --input_dataname $input_dataname \
         --output_dataname $output_dataname \
-        --reg_methods $reg_methods \
+        --reg_methods "${reg_methods[@]}" \
+        --compare_ratio_method $compare_ratio_method \
+        --compare_ml_ratio_method $compare_ml_ratio_method \
         --results_dir "../results/$name"
-    rm ../results/$name/*.pkl
+    for reg_method in "${reg_methods[@]}"
+    do
+        rm ../results/$name/$reg_method/*.pkl
+    done
 done
