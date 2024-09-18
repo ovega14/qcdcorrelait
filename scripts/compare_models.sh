@@ -1,19 +1,24 @@
 #!/bin/bash
+set -e  # Break immediately if command exits with non-zero status
 export OMP_NUM_THREADS=1
 #ulimit -Sv 9000000
 seed=42
 num=0
+
+lr=0.01
+l2_coeff=1e-2
+training_steps=200
 track_corrs=0
-compare_ratio_method=1
-compare_ml_ratio_method=1
-#dict_hyperparams='{"lr":0.01,"l2_coeff":1e-2,"training_steps":500}'
+
 train_ind_list="[0]"
 bc_ind_list="[3,6,12,15,18]"
 
-# respecify params here !!!
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-reg_methods=("Linear" "MLP" "CNN" "DTR" "RFR")
+reg_methods=("Linear" "MLP" "CNN" "DTR")
+modify_ratio=1
+compare_ratio_method=1
+compare_ml_ratio_method=1
 
 mi1label=("0.548")
 mi2label=("0.01555")
@@ -58,17 +63,42 @@ do
         mkdir ../results/$name/$reg_method/plots
         mkdir ../results/$name/$reg_method/model
         mkdir ../results/$name/$reg_method/results
+        python -W ignore ../frontend/train_model.py \
+            --seed $seed \
+            --input_dataname $input_dataname \
+            --output_dataname $output_dataname \
+            --reg_method $reg_method \
+            --lr $lr \
+            --l2_coeff $l2_coeff \
+            --training_steps $training_steps \
+            --train_ind_list $train_ind_list \
+            --bc_ind_list $bc_ind_list\
+            --track_corrs $track_corrs \
+            --results_dir "../results/$name"
+        python -W ignore ../frontend/infer_data.py \
+            --seed $seed \
+            --input_dataname $input_dataname \
+            --output_dataname $output_dataname \
+            --reg_method $reg_method \
+            --train_ind_list $train_ind_list \
+            --bc_ind_list $bc_ind_list\
+            --modify_ratio $modify_ratio \
+            --compare_ratio_method $compare_ratio_method \
+            --compare_ml_ratio_method $compare_ml_ratio_method \
+            --results_dir "../results/$name"
+        python -W ignore ../frontend/fit_corrs.py \
+            --seed $seed \
+            --reg_method $reg_method \
+            --compare_ratio_method $compare_ratio_method \
+            --compare_ml_ratio_method $compare_ml_ratio_method \
+            --input_dataname $input_dataname \
+            --output_dataname $output_dataname \
+            --results_dir "../results/$name"
     done
-    python -W ignore main.py \
-        --seed $seed \
+    python -W ignore ../frontend/compare_models.py \
         --input_dataname $input_dataname \
         --output_dataname $output_dataname \
-        --reg_methods "${reg_methods[@]}" \
-        --dict_hyperparams $dict_hyperparams \
-        --train_ind_list $train_ind_list \
-        --bc_ind_list $bc_ind_list\
-        --results_dir ../results/$name\
-        --track_corrs $track_corrs\
-        --compare_ratio_method $compare_ratio_method\
-        --compare_ml_ratio_method $compare_ml_ratio_method
+        --reg_methods $reg_methods \
+        --results_dir "../results/$name"
+    rm ../results/$name/*.pkl
 done

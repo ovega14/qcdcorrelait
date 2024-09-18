@@ -568,5 +568,5 @@ def plot_fit_params(
     save_plot(
         fig=fig, 
         path=args.results_dir +'/', 
-        filename='fit_params_comparison'
+        filename='fit_params_comparison' + tag
     )
