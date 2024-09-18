@@ -7,4 +7,4 @@ This repository contains a framework for performing AI-enhanced computations of 
 - Andrew Lytle (atlytle[at]illinois[dot]edu)
 
 ## Scripts:
-The data file `l64192a_run2_810-6996_1028cfgs.hdf5` is required to run the scripts.
+The data file `l64192a_run2_810-6996_1028cfgs.hdf5` is required to run the scripts. In order for everything to work properly, this file should be inside a folder called `data` that lives at the top level of the repo.
