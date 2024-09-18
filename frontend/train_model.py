@@ -375,7 +375,7 @@ if __name__ == '__main__':
     add('--lr', type=float, default=0.01)
     add('--l2_coeff', type=float, default=1e-2)
     add('--training_steps', type=int, default=500)    
-    add('--track_corrs', type=bool, default=1)
+    add('--track_corrs', type=int, default=1)
     add('--results_dir', type=str)
 
     args = parser.parse_args()

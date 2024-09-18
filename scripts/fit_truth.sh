@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e  # Break immediately if command exits with non-zero status
+set -e
 export OMP_NUM_THREADS=1
 #ulimit -Sv 9000000
 seed=42
