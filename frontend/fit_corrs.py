@@ -150,8 +150,10 @@ def main(args):
     global NCFG, NSRC, NTAU, TAGS
 
     dict_data = load_data(args.results_dir + '/dict_data')
-    ds_ratio_method = load_data(args.results_dir + '/ds_ratio_method')
-    ds_ml_ratio_method = load_data(args.results_dir + '/ds_ml_ratio_method')
+    if args.compare_ratio_method:
+        ds_ratio_method = load_data(args.results_dir + '/ds_ratio_method')
+    if args.compare_ml_ratio_method:
+        ds_ml_ratio_method = load_data(args.results_dir + '/ds_ml_ratio_method')
 
     dict_orig_corrs = _get_corrs_from_tags(dict_data, TAGS)
 
