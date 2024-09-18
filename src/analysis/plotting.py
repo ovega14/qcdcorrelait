@@ -474,9 +474,9 @@ def plot_fit_params(
                 marker='^', ms=1.0, 
                 label=f'{method}'
             )
-        if args.compare_ratio_method:
+        if args.compare_ml_ratio_method:
             for j, method in enumerate(reg_methods):
-                fit_rm = dict_fits[method]['ratio_method_pred']
+                fit_rm = dict_fits[method]['ml_ratio_method_pred']
                 a_rm = fit_rm.p[filename + ':a']
                 axes[0, i].errorbar(
                     x=len(reg_methods)+j+1, 
@@ -523,9 +523,9 @@ def plot_fit_params(
                 marker='^', ms=1.0, 
                 label=f'{method}'
             )
-        if args.compare_ratio_method:
+        if args.compare_ml_ratio_method:
             for j, method in enumerate(reg_methods):
-                fit_rm = dict_fits[method]['ratio_method_pred']
+                fit_rm = dict_fits[method]['ml_ratio_method_pred']
                 dE_rm = fit_rm.p[filename + ':dE']
                 axes[1, i].errorbar(
                     x=len(reg_methods)+j+1, 
@@ -568,5 +568,5 @@ def plot_fit_params(
     save_plot(
         fig=fig, 
         path=args.results_dir +'/', 
-        filename='fit_params_comparison' + tag
+        filename='fit_params_comparison_' + tag
     )

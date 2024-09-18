@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e  # Break immediately if command exits with non-zero status
+set -e
 export OMP_NUM_THREADS=1
 #ulimit -Sv 9000000
 seed=42
@@ -15,7 +15,7 @@ bc_ind_list="[3,6,12,15,18]"
 
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-reg_methods=("Linear" "MLP" "CNN" "DTR")
+reg_methods=("Linear" "MLP") #"CNN" "DTR")
 modify_ratio=1
 compare_ratio_method=1
 compare_ml_ratio_method=1
