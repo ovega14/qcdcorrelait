@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import torch
+import numpy as np
 import gvar as gv
 
 import argparse
 import copy
 import json
-import pickle
 
 import numpy.typing as npt
 from typing import Any
@@ -13,6 +13,7 @@ from typing import Any
 import sys
 sys.path.insert(0, '../src/')
 from utils import set_np_seed, load_data, set_plot_preferences, save_data
+from processing.io_utils import get_corrs
 from analysis.fitting import fit_corrs
 from analysis.tabulation import FitParamsTable
 
@@ -142,6 +143,25 @@ def _get_corrs_from_tags(
     return corrs
 
 
+def _load_truth(
+    filename: str, 
+    input_name: str, 
+    output_name: str
+) -> dict[str, npt.NDArray]:
+    """
+    Loads truth-level data separate from trained data.
+    Meant only for use when fitting solely to truth data.
+    """
+    global NSRC
+    _, corr_o = get_corrs(
+        filename,
+        [input_name, output_name],
+        NSRC
+    )
+    corr_o_truth = np.average(corr_o, axis=-1)
+    return {'corr_o_truth': corr_o_truth}
+
+
 # =============================================================================
 def main(args):
     set_np_seed(args.seed)
@@ -149,7 +169,12 @@ def main(args):
 
     global NCFG, NSRC, NTAU, TAGS
 
-    dict_data = load_data(args.results_dir + '/dict_data')
+    try:
+        dict_data = load_data(args.results_dir + '/dict_data')
+    except FileNotFoundError:
+        dict_data = _load_truth(args.hdf5_filename, 
+                                args.input_dataname, args.output_dataname)
+
     if args.compare_ratio_method:
         ds_ratio_method = load_data(args.results_dir + '/ds_ratio_method')
     if args.compare_ml_ratio_method:
@@ -249,8 +274,10 @@ if __name__ == '__main__':
 
     add('--seed', type=int, default=42)
     add('--reg_method', type=str, default='MLP')  # TODO: remove this arg
-    add('--compare_ratio_method', type=bool, default=1)
-    add('--compare_ml_ratio_method', type=bool, default=1)
+    add('--compare_ratio_method', type=int, default=0)
+    add('--compare_ml_ratio_method', type=int, default=0)
+    add('--hdf5_filename', type=str, 
+        default='../data/l64192a_run2_810-6996_1028cfgs.hdf5')
     add('--input_dataname', type=str)
     add('--output_dataname', type=str)
     add('--results_dir', type=str)
