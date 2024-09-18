@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pickle
-import dill
+import dill # type: ignore
 
 import numpy.typing as npt
 from typing import TypeVar
