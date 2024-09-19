@@ -47,7 +47,11 @@ def predict(
     corr_i_bc_tensor = dict_data["corr_i_bc_tensor"]
     n_corr_i_bc_tensor = (corr_i_bc_tensor - corr_i_train_means) / corr_i_train_stds
     
-    if isinstance(model, torch.nn.Module):
+    if reg_method == 'Identity':
+        n_corr_o_train_pred_tensor = copy.deepcopy(n_corr_i_train_tensor)
+        n_corr_o_unlab_pred_tensor = copy.deepcopy(n_corr_i_unlab_tensor)
+        n_corr_o_bc_pred_tensor = copy.deepcopy(n_corr_i_bc_tensor)
+    elif isinstance(model, torch.nn.Module):
         net = model
         net.eval()
         with torch.no_grad():

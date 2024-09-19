@@ -82,8 +82,11 @@ def main(args):
 
     global NCFG, NSRC, NTAU
 
-    model = load_model(args.results_dir + '/model')
     dict_data = load_data(args.results_dir + '/dict_data')
+    if args.reg_method == 'Identity':
+        model = torch.nn.Identity
+    else:
+        model = load_model(args.results_dir + '/model')
 
     # Pre-process -------------------------------------------------------------
     corr_i, corr_o = get_corrs(

@@ -15,12 +15,12 @@ bc_ind_list="[3,6,12,15,18]"
 
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-reg_method="MLP"
+reg_method="Identity"
 modify_ratio=1
 compare_ratio_method=1
 compare_ml_ratio_method=1
 
-mi1label=("0.548")
+mi1label=("0.843")
 mi2label=("0.01555")
 mo1label=("0.164")
 mo2label=("0.01555")

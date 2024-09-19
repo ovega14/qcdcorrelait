@@ -36,7 +36,8 @@ TORCH_REGRESSORS: dict[str, TorchRegressor] = {
     'Linear': LinearModel,
     'MLP': MLP,
     'CNN': CNN,
-    'Transformer': Transformer
+    'Transformer': Transformer,
+    'Identity': torch.nn.Identity
 }
 
 SKLEARN_REGRESSORS: dict[str, SklearnRegressor] = {
@@ -137,6 +138,8 @@ def make_model(
                 input_dim = 1, 
                 num_heads = 1
             )
+        elif reg_method == 'Identity':
+            model = torch.nn.Identity
     
     elif reg_method in SKLEARN_REGRESSORS.keys():
         print(f'Using {reg_method} for regression.')
@@ -342,22 +345,24 @@ def main(args):
     inputs, outputs = prepare_data(dict_data)
     
     model = make_model(args.reg_method, args.seed)
-    if isinstance(model, torch.nn.Module):
-        trained_model = train_torch_network(
-            inputs, outputs,
-            lr = args.lr,
-            l2_coeff = args.l2_coeff,
-            training_steps = args.training_steps,
-            model = model,
-            results_dir = args.results_dir,
-            track_corrs = args.track_corrs
-        )
-    else:
-        trained_model = train_sklearn_model(
-            inputs, outputs,
-            model = model
-        )
-    save_model(model=trained_model, path=args.results_dir + '/model')
+
+    if args.reg_method != 'Identity':
+        if isinstance(model, torch.nn.Module):
+            trained_model = train_torch_network(
+                inputs, outputs,
+                lr = args.lr,
+                l2_coeff = args.l2_coeff,
+                training_steps = args.training_steps,
+                model = model,
+                results_dir = args.results_dir,
+                track_corrs = args.track_corrs
+            )
+        else:
+            trained_model = train_sklearn_model(
+                inputs, outputs,
+                model = model
+            )
+        save_model(model=trained_model, path=args.results_dir + '/model')
 
 
 if __name__ == '__main__':
