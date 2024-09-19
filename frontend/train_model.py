@@ -248,17 +248,13 @@ def train_torch_network(
             truth = output_data.detach().numpy()
             correlation = np.corrcoef(prediction, truth, rowvar=False)
             correlations.append(correlation)
-    correlations = np.array(correlations)
-    tau_1, tau_2 = 4, 12
-    rho_diag = correlations[-1][tau_1, NTAU - 1 + tau_1]
-    rho_off_diag = correlations[-1][tau_1, NTAU - 1 + tau_2]
-    print('FINAL DIAG TRAIN CORRELATION B/W PRED AND TRUTH:', rho_diag)
-    print('FINAL OFF-DIAG TRAIN CORRELATION B/W PRED AND TRUTH:', rho_off_diag)
-    
-    #input = input_data.detach().numpy()
-    #truth = output_data.detach.numpy()
-    #rho_base = np.corrcoef(input, truth, rowvar=False)[tau_1, NTAU - 1 + tau_2]
-    #print('BASELINE CORRELATION B/W INPUT AND TRUTH:', rho_base)
+    if track_corrs:
+        correlations = np.array(correlations)
+        tau_1, tau_2 = 4, 12
+        rho_diag = correlations[-1][tau_1, NTAU - 1 + tau_1]
+        rho_off_diag = correlations[-1][tau_1, NTAU - 1 + tau_2]
+        print('FINAL DIAG TRAIN CORRELATION B/W PRED AND TRUTH:', rho_diag)
+        print('FINAL OFF-DIAG TRAIN CORRELATION B/W PRED AND TRUTH:', rho_off_diag)
     
     # Plot loss
     plot_loss(losses, results_dir)
