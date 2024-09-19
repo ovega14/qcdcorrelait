@@ -184,9 +184,11 @@ def main(args):
     tau_2 = 12
     unlab_pred = np.average(corr_o_unlab_pred, axis=-1)
     corr_mat = np.corrcoef(unlab_pred, corr_o_truth, rowvar=True)
-    print('corr_mat shape:', corr_mat.shape)  
-    rho = corr_mat[tau_1, NTAU - 1 + tau_2]
-    print('CORRELATION B/W TEST PREDICTED DATA AND TRUTH DATA:', rho)
+    rho_diag = corr_mat[tau_1, NTAU - 1 + tau_1]
+    rho_off_diag = corr_mat[tau_1, NTAU - 1 + tau_2]
+    print('DIAG CORRELATION B/W TEST PRED & TRUTH:', rho_diag)
+    print('OFF-DIAG CORRELATION B/W TEST PRED & TRUTH:', rho_off_diag)
+    
 
     plot_correlators(
         num_tau = NTAU,

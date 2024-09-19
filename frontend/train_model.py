@@ -250,8 +250,10 @@ def train_torch_network(
             correlations.append(correlation)
     correlations = np.array(correlations)
     tau_1, tau_2 = 4, 12
-    rho = correlations[-1][tau_1, NTAU - 1 + tau_2]
-    print('FINAL CORRELATION B/W PRED AND TRUTH:', rho)
+    rho_diag = correlations[-1][tau_1, NTAU - 1 + tau_1]
+    rho_off_diag = correlations[-1][tau_1, NTAU - 1 + tau_2]
+    print('FINAL DIAG TRAIN CORRELATION B/W PRED AND TRUTH:', rho_diag)
+    print('FINAL OFF-DIAG TRAIN CORRELATION B/W PRED AND TRUTH:', rho_off_diag)
     
     #input = input_data.detach().numpy()
     #truth = output_data.detach.numpy()
