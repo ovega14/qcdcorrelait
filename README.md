@@ -6,5 +6,5 @@ This repository contains a framework for performing AI-enhanced computations of 
 - Octavio Vega (octavio5[at]illinois[dot]edu)
 - Andrew Lytle (atlytle[at]illinois[dot]edu)
 
-## Scripts:
+## Data:
 The data file `l64192a_run2_810-6996_1028cfgs.hdf5` is required to run the scripts. In order for everything to work properly, this file should be inside a folder called `data` that lives at the top level of the repo.
