@@ -75,37 +75,37 @@ def make_priors(filename: str, *, ne: int, no: int) -> dict[str, gv.GVar]:
     if filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.01555_p000') or \
        filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.00311_p000'):
         prior[filename + ':dE'] = gv.gvar(['0.40(5)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(40)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['0.50(5)', '0.10(10)', '0.20(20)', '0.30(20)', '0.20(20)'][:no])
+        prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.20(20)', '0.30(20)', '0.20(20)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
     
     elif filename.endswith('P5-P5_RW_RW_d_d_m0.1827_m0.01555_p000') or \
          filename.endswith('P5-P5_RW_RW_d_d_m0.1827_m0.00311_p000'):
         prior[filename + ':dE'] = gv.gvar(['0.40(5)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(40)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['0.50(5)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
+        prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
    
     elif filename.endswith('P5-P5_RW_RW_d_d_m0.365_m0.01555_p000') or \
          filename.endswith('P5-P5_RW_RW_d_d_m0.365_m0.00311_p000'):
         prior[filename + ':dE'] = gv.gvar(['0.65(5)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(40)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['0.75(5)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
+        prior[filename + ':dEo'] = gv.gvar(['0.75(10)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
 
     elif filename.endswith('P5-P5_RW_RW_d_d_m0.548_m0.01555_p000') or \
          filename.endswith('P5-P5_RW_RW_d_d_m0.548_m0.00311_p000'):
         prior[filename + ':dE'] = gv.gvar(['0.85(5)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(40)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['0.95(5)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
+        prior[filename + ':dEo'] = gv.gvar(['0.95(10)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
     
     elif filename.endswith('P5-P5_RW_RW_d_d_m0.731_m0.01555_p000') or \
          filename.endswith('P5-P5_RW_RW_d_d_m0.731_m0.00311_p000'):
         prior[filename + ':dE'] = gv.gvar(['1.05(5)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(40)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['1.15(5)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
+        prior[filename + ':dEo'] = gv.gvar(['1.15(10)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
     
     elif filename.endswith('P5-P5_RW_RW_d_d_m0.843_m0.01555_p000') or \
          filename.endswith('P5-P5_RW_RW_d_d_m0.843_m0.00311_p000'):
         prior[filename + ':dE'] = gv.gvar(['1.15(5)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(40)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['1.25(5)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
+        prior[filename + ':dEo'] = gv.gvar(['1.25(10)', '0.10(10)', '0.20(20)', '0.30(20)', '0.30(20)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
     
     else:
