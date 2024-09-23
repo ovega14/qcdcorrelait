@@ -74,7 +74,7 @@ def make_priors(filename: str, *, ne: int, no: int) -> dict[str, gv.GVar]:
     if filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.01555_p000') or \
        filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.00311_p000'):
         prior[filename + ':dE'] = gv.gvar(['0.400(50)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.10(10)', '0.20(20)', '0.20(10)'][:no])
+        prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.20(20)', '0.20(20)', '0.20(20)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
         if ne >= 5:
             prior[filename +':a'][4] = gv.gvar('0.50(50)')
