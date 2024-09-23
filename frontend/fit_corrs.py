@@ -13,7 +13,7 @@ from typing import Any
 import sys
 sys.path.insert(0, '../src/')
 from utils import set_np_seed, load_data, set_plot_preferences, save_data
-from processing.io_utils import get_corrs
+from processing.io_utils import get_corrs, rotate_sourcetimes
 from analysis.fitting import fit_corrs
 from analysis.tabulation import FitParamsTable
 
@@ -22,6 +22,8 @@ from analysis.tabulation import FitParamsTable
 NCFG: int = 1028
 NTAU: int = 192
 NSRC: int = 24
+
+SOURCE_TIME_INDS: list[int] = [6]  # for truth fitting only
 
 TAGS: list[str] = [
     'corr_o_truth', 
@@ -69,30 +71,40 @@ def make_priors(filename: str, *, ne: int, no: int) -> dict[str, gv.GVar]:
     prior = gv.BufferDict()
 
     prior[filename + ':a'] = gv.gvar(ne*['0.0(0.5)'])
-    prior[filename + ':ao'] = gv.gvar(no*['0.0(0.5)'])
+    prior[filename + ':ao'] = gv.gvar(no*['0.0(0.2)'])
 
-    if filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.01555_p000'):
-        prior[filename + ':dE'] = gv.gvar(['0.4000(50)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['0.25(5)', '0.25(5)', '0.10(10)', '0.10(10)', '0.20(10)'][:no])
+    if filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.01555_p000') or \
+       filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.00311_p000'):
+        prior[filename + ':dE'] = gv.gvar(['0.400(50)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
+        prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.10(10)', '0.10(10)', '0.20(10)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
         if ne >= 5:
             prior[filename +':a'][4] = gv.gvar('0.50(50)')
     
-    elif filename.endswith('P5-P5_RW_RW_d_d_m0.1827_m0.01555_p000'):
-        prior[filename + ':dE'] = gv.gvar(['0.40(5)', '0.20(5)', '0.20(10)'])
-        prior[filename + ':dEo'] = gv.gvar(['0.30(5)', '0.20(5)', '0.20(10)'])
-    
-    elif filename.endswith('P5-P5_RW_RW_d_d_m0.365_m0.01555_p000'):
-        prior[filename + ':dE'] = gv.gvar(['0.65(25)', '0.27(5)', '0.62(5)'])
-        prior[filename + ':dEo'] = gv.gvar(['0.65(25)', '0.06(10)', '0.28(5)'])
+    elif filename.endswith('P5-P5_RW_RW_d_d_m0.1827_m0.01555_p000') or \
+         filename.endswith('P5-P5_RW_RW_d_d_m0.1827_m0.00311_p000'):
+        prior[filename + ':dE'] = gv.gvar(['0.400(50)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
+        prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.10(10)', '0.10(10)', '0.20(10)'][:no])
+   
+    elif filename.endswith('P5-P5_RW_RW_d_d_m0.365_m0.01555_p000') or \
+         filename.endswith('P5-P5_RW_RW_d_d_m0.365_m0.00311_p000'):
+        prior[filename + ':dE'] = gv.gvar(['0.65(25)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
+        prior[filename + ':dEo'] = gv.gvar(['0.75(25)', '0.10(10)', '0.10(10)', '0.10(10)', '0.20(10)'][:no])
 
-    elif filename.endswith('P5-P5_RW_RW_d_d_m0.548_m0.01555_p000'):
-        prior[filename + ':dEo'] = gv.gvar(['0.85(05)', '0.10(5)', '0.25(10)', '0.25(30)', '0.25(30)'])
-        prior[filename + ':dE'] = gv.gvar(['0.85(05)', '0.20(5)', '0.30(10)', '0.30(20)', '0.30(20)'])
+    elif filename.endswith('P5-P5_RW_RW_d_d_m0.548_m0.01555_p000') or \
+         filename.endswith('P5-P5_RW_RW_d_d_m0.548_m0.00311_p000'):
+        prior[filename + ':dE'] = gv.gvar(['0.85(05)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(40)'][:ne])
+        prior[filename + ':dEo'] = gv.gvar(['0.95(10)', '0.10(10)', '0.20(20)', '0.20(20)', '0.20(20)'][:no])
 
-    elif filename.endswith('P5-P5_RW_RW_d_d_m0.843_m0.01555_p000'):
-        prior[filename + ':dE'] = gv.gvar(['1.15(2)', '0.11(5)', '0.25(10)'])
-        prior[filename + ':dEo'] = gv.gvar(['1.2(2)', '0.160(5)', '0.19(10)'])
+    elif filename.endswith('P5-P5_RW_RW_d_d_m0.731_m0.01555_p000') or \
+         filename.endswith('P5-P5_RW_RW_d_d_m0.731_m0.00311_p000'):
+        prior[filename + ':dE'] = gv.gvar(['1.05(2)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
+        prior[filename + ':dEo'] = gv.gvar(['1.1(2)', '0.10(10)', '0.10(10)', '0.20(20)', '0.20(20)'][:no])
+
+    elif filename.endswith('P5-P5_RW_RW_d_d_m0.843_m0.01555_p000') or \
+         filename.endswith('P5-P5_RW_RW_d_d_m0.843_m0.00311_p000'):
+        prior[filename + ':dE'] = gv.gvar(['1.15(2)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
+        prior[filename + ':dEo'] = gv.gvar(['1.2(2)', '0.10(10)', '0.10(10)', '0.20(20)', '0.20(20)'][:no])
 
     else:
         raise KeyError('Unknown file', filename)
@@ -144,21 +156,33 @@ def _get_corrs_from_tags(
 
 
 def _load_truth(
-    filename: str, 
-    input_name: str, 
-    output_name: str
+    filename: str,  
+    output_name: str,
+    source_times: list[int] = None
 ) -> dict[str, npt.NDArray]:
     """
     Loads truth-level data separate from trained data.
     Meant only for use when fitting solely to truth data.
+
+    The data is averaged over the source times axis.
     """
     global NSRC
-    _, corr_o = get_corrs(
+    corr_o = get_corrs(
         filename,
-        [input_name, output_name],
+        [output_name],
         NSRC
-    )
+    )[0]
+    print('corr_o shape:', corr_o.shape)  # [192, 1028, 24]
+    corr_o = rotate_sourcetimes(corr_o, shift=7)
+    if source_times is None:
+        source_times = list(range(24))
+    corr_o = corr_o[..., source_times]
+
+    print('corr_o_shape after indexing:', corr_o.shape)
+
+    # Average over source times axis
     corr_o_truth = np.average(corr_o, axis=-1)
+
     return {'corr_o_truth': corr_o_truth}
 
 
@@ -172,8 +196,10 @@ def main(args):
     try:
         dict_data = load_data(args.results_dir + '/dict_data')
     except FileNotFoundError:
+        global SOURCE_TIME_INDS
         dict_data = _load_truth(args.hdf5_filename, 
-                                args.input_dataname, args.output_dataname)
+                                args.output_dataname,
+                                SOURCE_TIME_INDS)
 
     if args.compare_ratio_method:
         ds_ratio_method = load_data(args.results_dir + '/ds_ratio_method')
@@ -182,7 +208,10 @@ def main(args):
 
     dict_orig_corrs = _get_corrs_from_tags(dict_data, TAGS)
 
-    filename = args.input_dataname + '_' + args.output_dataname
+    if args.input_dataname:
+        filename = args.input_dataname + '_' + args.output_dataname
+    else:
+        filename = args.output_dataname
     dict_opts = make_opts(filename)
     prior = make_priors(filename, ne=NEVEN, no=NODD)
     dict_fits = fit_corrs(dict_orig_corrs, dict_opts, prior)
