@@ -176,9 +176,9 @@ def _load_truth(
     corr_o = rotate_sourcetimes(corr_o, shift=7)
     if source_times is None:
         source_times = list(range(24))
+    print('loading truth data with source times:', source_times)
     corr_o = corr_o[..., source_times]
-
-    print('corr_o_shape after indexing:', corr_o.shape)
+    print('corr_o shape after indexing:', corr_o.shape)
 
     # Average over source times axis
     corr_o_truth = np.average(corr_o, axis=-1)
