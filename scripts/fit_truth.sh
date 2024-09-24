@@ -37,7 +37,7 @@ do
     mkdir ../results/$name/data
     mkdir ../results/$name/plots
     mkdir ../results/$name/results
-    python -W ignore ../frontend/fit_corrs.py \
+    python -W ignore ../frontend/fit_truth.py \
         --seed $seed \
         --output_dataname $output_dataname \
         --results_dir "../results/$name"
