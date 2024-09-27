@@ -33,7 +33,7 @@ TAGS: list[str] = [
 
 # CorrFit hyperparams
 NEVEN: int = 5
-NODD: int = 5
+NODD: int = 4
 TPER: int = NTAU
 TMIN: int = 2
 TMAX: int = NTAU - 2
@@ -70,17 +70,34 @@ def make_priors(filename: str, *, ne: int, no: int) -> dict[str, gv.GVar]:
     # TODO: fix numbers of states for other mass combinations
     prior = gv.BufferDict()
 
+    #prior[filename + ':a'] = gv.gvar(ne*['0.0(0.5)'])
+    #prior[filename + ':ao'] = gv.gvar(no*['0.0(0.5)'])
+    #prior[filename + ':ao'] = gv.gvar(no*['0.0(0.2)'])
     prior[filename + ':a'] = gv.gvar(ne*['0.0(0.5)'])
+    prior[filename +':a'][-1] = gv.gvar('0.5(0.5)')
     prior[filename + ':ao'] = gv.gvar(no*['0.0(0.2)'])
 
     if filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.01555_p000') or \
        filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.00311_p000'):
-        prior[filename + ':dE'] = gv.gvar(['0.400(50)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
-        prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.10(10)', '0.10(10)', '0.20(10)'][:no])
+        prior[filename + ':dE'] = gv.gvar(['0.40(5)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(40)'][:ne])
+        prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.20(20)', '0.30(20)', '0.20(20)'][:no])
         prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
-        if ne >= 5:
-            prior[filename +':a'][4] = gv.gvar('0.50(50)')
-    
+
+    #if filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.01555_p000'):
+    #    prior[filename + ':dE'] = gv.gvar(['0.4000(50)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
+    #    prior[filename + ':dEo'] = gv.gvar(['0.25(5)', '0.25(5)', '0.10(10)', '0.10(10)', '0.20(10)'][:no])
+    #    prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
+    #    if ne >= 5:
+    #        prior[filename +':a'][4] = gv.gvar('0.50(50)')
+
+    #if filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.01555_p000') or \
+    #   filename.endswith('P5-P5_RW_RW_d_d_m0.164_m0.00311_p000'):
+    #    prior[filename + ':dE'] = gv.gvar(['0.400(50)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])
+    #    prior[filename + ':dEo'] = gv.gvar(['0.50(10)', '0.10(10)', '0.20(20)', '0.30(20)', '0.20(20)'][:no])
+    ##    prior[filename + ':a'][0] = gv.gvar('0.0500(50)')
+    #    if ne >= 5:
+    #        prior[filename +':a'][4] = gv.gvar('0.50(50)')
+
     elif filename.endswith('P5-P5_RW_RW_d_d_m0.1827_m0.01555_p000') or \
          filename.endswith('P5-P5_RW_RW_d_d_m0.1827_m0.00311_p000'):
         prior[filename + ':dE'] = gv.gvar(['0.400(50)', '0.200(50)', '0.280(50)', '0.60(20)', '1.00(20)'][:ne])

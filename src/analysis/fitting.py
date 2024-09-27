@@ -93,7 +93,21 @@ def fit_corrs(
                 tag=tag, filename=filename, tp=tp, tmin=tmin, tmax=tmax)
             )
             fitter = cf.CorrFitter(models=[model])
-            fit = fitter.lsqfit(data=data, prior=prior, maxit=maxit)
+            #p0 = {'a0':0.05398, 'a1':0.0748, 'a2':0.1496, 'a3':0.359, 'a4':0.700,
+            #      'dE0':0.39855, 'dE1':0.1960, 'dE2': 0.312, 'dE3': 0.641, 'dE4':1.063,
+            #      'ao0': 0.0068, 'ao1': 0.0186, 'ao2': 0.02507, 'ao3': -2.46802e-07,
+            #      'dEo0': 0.447, 'dEo1':0.080, 'dEo2':0.307, 'dEo3':0.30}
+            p0 = {
+                'P5-P5_RW_RW_d_d_m0.548_m0.01555_p000_P5-P5_RW_RW_d_d_m0.164_m0.01555_p000:a':
+                    [0.05398, 0.0748, 0.1496, 0.359,  0.700],
+                'P5-P5_RW_RW_d_d_m0.548_m0.01555_p000_P5-P5_RW_RW_d_d_m0.164_m0.01555_p000:dE':
+                    [0.39855, 0.1960, 0.312, 0.641, 1.063],
+                'P5-P5_RW_RW_d_d_m0.548_m0.01555_p000_P5-P5_RW_RW_d_d_m0.164_m0.01555_p000:ao':
+                    [0.0068, 0.0186, 0.02507, -2.46802e-07],
+                'P5-P5_RW_RW_d_d_m0.548_m0.01555_p000_P5-P5_RW_RW_d_d_m0.164_m0.01555_p000:dEo': 
+                    [0.447, 0.080, 0.307, 0.30]
+            }
+            fit = fitter.lsqfit(data=data, prior=prior, maxit=maxit, p0=p0)
             dict_fits[tag] = fit
             print(fit)
             print('=' * 130)

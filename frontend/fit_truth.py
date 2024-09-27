@@ -19,18 +19,23 @@ from analysis.fitting import fit_corrs
 
 
 # =============================================================================
+TAU_1: int = 4
+TAU_2: int = 12
+
+
 NCFG: int = 1028
 NTAU: int = 192
 NSRC: int = 24
 
 SOURCE_TIME_INDS: list[int] = [6]  # for truth fitting only
-SHIFT = 2
+SHIFT = 8
 
 TAGS: list[str] = [
     'corr_o_truth', 
     'corr_o_pred_corrected', 
     'corr_o_pred_uncorrected'
 ]
+REG_METHOD: str = 'MLP'
 
 # CorrFit hyperparams
 NEVEN: int = 5
@@ -222,6 +227,10 @@ def fit_truth_data(source_times: list[int]):
 
 
 def nts_curve(filename, results_dir):
+    """
+    Creates the noies to signal curves for fit parameters derived from truth-
+    level data being fit vs number of source times included in the data.
+    """
     global NSRC, SHIFT
     a0_nts = []
     dE0_nts = []
@@ -234,7 +243,6 @@ def nts_curve(filename, results_dir):
         nts_dE  = dE[0].sdev / dE[0].mean
         a0_nts.append(nts_a)
         dE0_nts.append(nts_dE)
-    print('nts:', a0_nts)
 
     fig = plt.figure(figsize=(8., 8.))
     plt.plot(list(range(1, 25)), a0_nts)
@@ -249,6 +257,13 @@ def nts_curve(filename, results_dir):
     plt.ylabel(r'Noise to Signal on $dE_0$')
     plt.title(f'shift = {SHIFT}')
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename='dE0_nts')
+
+
+def ml_pred_nts():
+    global REG_METHOD
+    reg_method = REG_METHOD
+
+
 
 
 # =============================================================================

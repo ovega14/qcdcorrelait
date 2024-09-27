@@ -10,7 +10,7 @@ import json
 
 import sys
 sys.path.insert(0, '../src/')
-from processing.io_utils import get_corrs
+from processing.io_utils import get_corrs, rotate_sourcetimes
 from processing.conversion import tensor_to_avg_over_tsrc
 from regression.inference import predict
 from regression.ratio_method import RatioMethod
@@ -63,6 +63,7 @@ def infer_ratio_method(
     )
     ds_ratio_method = ratio_method.predict()
 
+    corr_o = rotate_sourcetimes(corr_o, shift=7)
     ml_ratio_method = RatioMethod(
         corr_i = corr_o_pred,
         corr_o = corr_o,
