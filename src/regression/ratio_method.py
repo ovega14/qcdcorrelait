@@ -75,6 +75,11 @@ class RatioMethod:
         x = nts_lp_i
         y = nts_lp_o
 
+        rho = gv.evalcorr(self.gv_dataset)[('lp_i', 'lp_o')]
+        rho = np.array([rho[i, i] for i in range(rho.shape[0])])
+        print("rho =", rho)
+        print("rho.shape =", rho.shape)
+
         if self.alpha is None:
             self.alpha = y / x / (1. + s**2)
         gv_hp_i_alpha = self.gv_dataset['hp_i'] ** self.alpha
