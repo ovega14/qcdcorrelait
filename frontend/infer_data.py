@@ -223,6 +223,19 @@ def main(args):
         args = args  # TODO: get rid of args as an arg for this plot func
     )
 
+    plot_noise_to_signal(
+        num_tau = NTAU,
+        corr_o_truth = corr_o_truth,
+        corr_o_labeled_truth = corr_o_labeled_truth,
+        corr_o_pred_corrected = corr_o_pred_corrected,
+        corr_o_pred_uncorrected = corr_o_pred_uncorrected,
+        ds_ratio_method = ds_ratio_method,
+        ds_ml_ratio_method = ds_ml_ratio_method,
+        results_dir = args.results_dir,
+        tmax=50,
+        args = args  # TODO: get rid of args as an arg for this plot func
+    )
+
     plot_normalized_noise_to_signal(
         num_tau = NTAU,
         corr_o_truth = corr_o_truth,

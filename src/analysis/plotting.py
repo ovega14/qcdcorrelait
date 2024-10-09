@@ -3,6 +3,7 @@ import gvar as gv
 from scipy.stats import sem
 
 import numpy.typing as npt
+from typing import Optional
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -219,7 +220,8 @@ def plot_noise_to_signal(
     ds_ratio_method,
     ds_ml_ratio_method,
     results_dir,
-    args
+    args,
+    tmax: Optional[int] = None
 ) -> None:
     """
     DOCS TODO
@@ -236,34 +238,40 @@ def plot_noise_to_signal(
     """
     fig = plt.figure(figsize=(8., 6.))
 
+    if tmax is None:
+        tmax = num_tau
+        filename = 'pred_nts'
+    else: 
+        filename = 'zoomed_pred_nts'
+
     # yscale = 'linear'
     yscale = 'log'
 
     plt.plot(
-        np.arange(0, num_tau),
-        sem(corr_o_truth, axis=-1)/np.average(corr_o_truth, axis=-1),
+        np.arange(0, tmax),
+        sem(corr_o_truth, axis=-1)[:tmax]/np.average(corr_o_truth, axis=-1)[:tmax],
         c='b',
         linewidth=1.4,
         label='Truth',
     )
     plt.plot(
-        np.arange(0, num_tau),
-        sem(corr_o_labeled_truth, axis=-1)/np.average(corr_o_labeled_truth, axis=-1),
+        np.arange(0, tmax),
+        sem(corr_o_labeled_truth, axis=-1)[:tmax]/np.average(corr_o_labeled_truth, axis=-1)[:tmax],
         c='g',
         linewidth=1.3,
         label='Labeled set',
     )
 
     plt.plot(
-        np.arange(0, num_tau),
-        sem(corr_o_pred_corrected, axis=-1)/np.average(corr_o_pred_corrected, axis=-1),
+        np.arange(0, tmax),
+        sem(corr_o_pred_corrected, axis=-1)[:tmax]/np.average(corr_o_pred_corrected, axis=-1)[:tmax],
         c='r',
         linewidth=1.2,
         label='Pred Corrected',
     )
     plt.plot(
-        np.arange(0, num_tau),
-        sem(corr_o_pred_uncorrected, axis=-1)/np.average(corr_o_pred_uncorrected, axis=-1),
+        np.arange(0, tmax),
+        sem(corr_o_pred_uncorrected, axis=-1)[:tmax]/np.average(corr_o_pred_uncorrected, axis=-1)[:tmax],
         c='gold',
         linewidth=1.1,
         label='Pred Uncorrected',
@@ -271,8 +279,8 @@ def plot_noise_to_signal(
 
     if args.compare_ratio_method == 1:
         plt.plot(
-            np.arange(0, num_tau),
-            gv.sdev(ds_ratio_method['ratio_method_pred']) / gv.mean(ds_ratio_method['ratio_method_pred']),
+            np.arange(0, tmax),
+            gv.sdev(ds_ratio_method['ratio_method_pred'])[:tmax] / gv.mean(ds_ratio_method['ratio_method_pred'])[:tmax],
             c='c',
             linewidth=1.0,
             label='Pred Ratio Method',
@@ -280,8 +288,8 @@ def plot_noise_to_signal(
 
     if args.compare_ml_ratio_method == 1:
         plt.plot(
-            np.arange(0, num_tau),
-            gv.sdev(ds_ml_ratio_method['ml_ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ml_ratio_method_pred']),
+            np.arange(0, tmax),
+            gv.sdev(ds_ml_ratio_method['ml_ratio_method_pred'])[:tmax] / gv.mean(ds_ml_ratio_method['ml_ratio_method_pred'])[:tmax],
             c='m',
             linewidth=0.9,
             label='Pred ML+Ratio Method',
@@ -292,7 +300,7 @@ def plot_noise_to_signal(
     plt.yscale(yscale)
 
     plt.legend(fontsize=12)
-    save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_nts')
+    save_plot(fig=fig, path=f'{results_dir}/plots/', filename=filename)
     
 
 def plot_normalized_noise_to_signal(
@@ -304,16 +312,22 @@ def plot_normalized_noise_to_signal(
     ds_ratio_method,
     ds_ml_ratio_method,
     results_dir,
-    args
+    args,
+    tmax: Optional[int] = None
 ) -> None:
     """
     Docs TODO
     """
     ##### Normalized NtS #####
+    if tmax is None:
+        tmax = num_tau
+        filename = 'pred_nts_normalized'
+    else:
+        filename = 'zoomed_nts_normalized'
     fig = plt.figure(figsize=(8., 6.))
     normalization_denominator = sem(corr_o_truth, axis=-1)/np.average(corr_o_truth, axis=-1)
     plt.plot(
-        np.arange(0, num_tau),
+        np.arange(0, tmax),
         sem(corr_o_truth, axis=-1)/np.average(corr_o_truth, axis=-1)/normalization_denominator,
         c='b',
         linewidth=1.4,
@@ -321,7 +335,7 @@ def plot_normalized_noise_to_signal(
     )
 
     plt.plot(
-        np.arange(0, num_tau),
+        np.arange(0, tmax),
         sem(corr_o_labeled_truth, axis=-1)/np.average(corr_o_labeled_truth, axis=-1)/normalization_denominator,
         c='g',
         linewidth=1.3,
@@ -329,14 +343,14 @@ def plot_normalized_noise_to_signal(
     )
 
     plt.plot(
-        np.arange(0, num_tau),
+        np.arange(0, tmax),
         sem(corr_o_pred_corrected, axis=-1)/np.average(corr_o_pred_corrected, axis=-1)/normalization_denominator,
         c='r',
         linewidth=1.2,
         label='Pred Corrected',
     )
     plt.plot(
-        np.arange(0, num_tau),
+        np.arange(0, tmax),
         sem(corr_o_pred_uncorrected, axis=-1)/np.average(corr_o_pred_uncorrected, axis=-1)/normalization_denominator,
         c='gold',
         linewidth=1.1,
@@ -345,7 +359,7 @@ def plot_normalized_noise_to_signal(
 
     if args.compare_ratio_method == 1:
         plt.plot(
-            np.arange(0, num_tau),
+            np.arange(0, tmax),
             gv.sdev(ds_ratio_method['ratio_method_pred']) / gv.mean(ds_ratio_method['ratio_method_pred'])/normalization_denominator,
             c='c',
             linewidth=1.0,
@@ -354,7 +368,7 @@ def plot_normalized_noise_to_signal(
 
     if args.compare_ml_ratio_method == 1:
         plt.plot(
-            np.arange(0, num_tau),
+            np.arange(0, tmax),
             gv.sdev(ds_ml_ratio_method['ml_ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ml_ratio_method_pred'])/normalization_denominator,
             c='m',
             linewidth=0.9,
@@ -369,7 +383,7 @@ def plot_normalized_noise_to_signal(
     save_plot(
         fig=fig, 
         path=f'{results_dir}/plots/', 
-        filename='pred_nts_normalized'
+        filename=filename
     )
     
 

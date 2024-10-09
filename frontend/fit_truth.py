@@ -9,16 +9,32 @@ import copy
 import json
 
 import numpy.typing as npt
-from typing import Any
+from typing import Any, TypeVar
 
 import sys
 sys.path.insert(0, '../src/')
 from utils import set_np_seed, set_plot_preferences, save_plot
-from processing.io_utils import get_corrs, rotate_sourcetimes
+from processing.io_utils import get_corrs, rotate_sourcetimes, preprocess_data
+from processing.conversion import tensor_to_avg_over_tsrc
 from analysis.fitting import fit_corrs
+from regression.torch_regressors import *
+from regression.inference import predict
+from regression.plotting import plot_loss
+from regression.utils import adjust_learning_rate, l2_regularization
 
 
 # =============================================================================
+TorchRegressor = TypeVar('TorchRegressor')
+SklearnRegressor = TypeVar('SklearnRegressor')
+
+TORCH_REGRESSORS: dict[str, TorchRegressor] = {
+    'Linear': LinearModel,
+    'MLP': MLP,
+    'CNN': CNN,
+    'Transformer': Transformer,
+    'Identity': torch.nn.Identity
+}
+
 TAU_1: int = 4
 TAU_2: int = 12
 
@@ -27,14 +43,38 @@ NCFG: int = 1028
 NTAU: int = 192
 NSRC: int = 24
 
-SOURCE_TIME_INDS: list[int] = [6]  # for truth fitting only
-SHIFT = 8
+# ###
+# For truth fitting only
+SOURCE_TIME_INDS: list[int] = list(range(24)) 
+SHIFT: int = 3
+# ###
+
+###
+# For ML fitting only
+NTRAIN: int = 1
+NBC: int = 5
+###
 
 TAGS: list[str] = [
     'corr_o_truth', 
     'corr_o_pred_corrected', 
     'corr_o_pred_uncorrected'
 ]
+
+# QUARK MASSES
+STRANGE_MASS: float = 0.01555
+LIGHT_MASS: float = 0.00311
+HEAVY_MASSES: list[float] = [
+    0.164,
+    0.1827,
+    0.365,
+    0.548,
+    0.731,
+    #0.767,  # THIS ONE DOESNT EXIST!!
+    0.843
+]
+
+
 REG_METHOD: str = 'MLP'
 
 # CorrFit hyperparams
@@ -175,11 +215,10 @@ def _shuffle_along_axis(x: npt.NDArray, axis: int):
     return x
 
 
-
 def _load_truth(
     filename: str,  
     output_name: str,
-    source_times: list[int] = None
+    source_times: list[int],
 ) -> dict[str, npt.NDArray]:
     """
     Loads truth-level data separate from trained data.
@@ -188,6 +227,7 @@ def _load_truth(
     The data is averaged over the source times axis.
     """
     global NSRC, SHIFT
+    
     corr_o = get_corrs(
         filename,
         [output_name],
@@ -197,16 +237,12 @@ def _load_truth(
     
     # rotate and/or shuffle
     corr_o = rotate_sourcetimes(corr_o, shift=SHIFT)
-
-    if source_times is None:
-        source_times = list(range(24))
-    print('loading truth data with source times:', source_times)
+    #print('loading truth data with source times:', source_times)
     corr_o = corr_o[..., source_times]
     print('corr_o shape after indexing:', corr_o.shape)
 
     # Average over source times axis
     corr_o_truth = np.average(corr_o, axis=-1)
-
     return {'corr_o_truth': corr_o_truth}
 
 
@@ -226,12 +262,206 @@ def fit_truth_data(source_times: list[int]):
     return dict_fits
 
 
-def nts_curve(filename, results_dir):
+def infer_ml_data(input_dataname, output_dataname):
+    """Fits the ML model and then fits inferred data"""
+    global NSRC, NTRAIN, NBC, REG_METHOD
+
+    total_inds: set[int] = {n for n in range(24)}
+    labeled_inds = np.random.choice(NSRC, size=NTRAIN + NBC, replace=False)
+    unlab_inds: set[int] = list(total_inds - set(labeled_inds))
+    bc_inds = np.random.choice(labeled_inds, size=NBC, replace=False)
+    train_inds = set(labeled_inds) - set(bc_inds)
+
+    train_ind_list = list(train_inds)
+    bc_ind_list = list(bc_inds)
+    unlab_ind_list = list(unlab_inds)
+
+    print(f'Fitting ML model with index subsets:')
+    print('Train indices =', train_ind_list)
+    print('Bias correction indices =', bc_ind_list)
+    print('Testing indices =', unlab_ind_list)
+
+    corr_i, corr_o = get_corrs(
+        args.hdf5_filename,
+        [input_dataname, output_dataname],
+        NSRC
+    )
+
+    corr_i = rotate_sourcetimes(corr_i, shift=SHIFT)
+    corr_o = rotate_sourcetimes(corr_o, shift=SHIFT)
+          
+    dict_data = preprocess_data(
+        corr_i, corr_o,
+        train_ind_list,
+        bc_ind_list,
+        unlab_ind_list
+    )
+
+    inputs, outputs = prepare_data(dict_data)
+    
+    model = make_model(REG_METHOD, args.seed)
+
+    if REG_METHOD == 'Identity':
+        trained_model = model
+    else:
+        trained_model = train_torch_network(
+            inputs, outputs,
+            lr = args.lr,
+            l2_coeff = args.l2_coeff,
+            training_steps = args.training_steps,
+            model = model,
+            results_dir = args.results_dir,
+            track_corrs = False
+        )
+
+    n_corr_i_train_tensor = (dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
+    
+    dict_results = predict(
+        n_corr_i_train_tensor = n_corr_i_train_tensor,
+        model = trained_model,
+        reg_method = REG_METHOD,
+        dict_data = dict_data
+    )
+
+    dict_data["n_corr_o_train_tensor"] = (dict_data["corr_o_train_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
+
+    dict_data["n_corr_i_unlab_tensor"] = (dict_data["corr_i_unlab_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
+    dict_data["n_corr_o_unlab_tensor"] = (dict_data["corr_o_unlab_tensor"] - dict_data["corr_o_train_means"]) / dict_data["corr_o_train_stds"]
+
+    dict_data["n_corr_i_bc_tensor"] = (dict_data["corr_i_bc_tensor"] -  dict_data["corr_i_train_means"]) /  dict_data["corr_i_train_stds"]
+    dict_data["n_corr_o_bc_tensor"] = (dict_data["corr_o_bc_tensor"] -  dict_data["corr_o_train_means"]) /  dict_data["corr_o_train_stds"]
+
+    n_corr_o_unlab_tensor = dict_data["n_corr_o_unlab_tensor"]
+    n_corr_o_bc_tensor = dict_data["n_corr_o_bc_tensor"]
+    corr_o_train_stds = dict_data["corr_o_train_stds"]
+    corr_o_train_means = dict_data["corr_o_train_means"]
+
+    corr_o_train_pred_tensor = dict_results["corr_o_train_pred_tensor"]
+    corr_o_unlab_pred_tensor = dict_results["corr_o_unlab_pred_tensor"]
+    corr_o_bc_pred_tensor = dict_results["corr_o_bc_pred_tensor"]
+    n_corr_o_unlab_pred_tensor = dict_results["n_corr_o_unlab_pred_tensor"]
+    n_corr_o_bc_pred_tensor = dict_results["n_corr_o_bc_pred_tensor"]
+
+    corr_o_train_pred = corr_o_train_pred_tensor.T.reshape((NTAU, NCFG, -1)).numpy()
+    corr_o_bc_pred = corr_o_bc_pred_tensor.T.reshape((NTAU, NCFG, -1)).numpy()
+    corr_o_unlab_pred = corr_o_unlab_pred_tensor.T.reshape((NTAU, NCFG, -1)).numpy()
+
+    corr_o_pred = []
+    curr_ind_train = 0
+    curr_ind_bc = 0
+    curr_ind_unlab = 0
+    for i in range(NSRC):
+        if i in train_ind_list:
+            corr_o_pred.append(corr_o_train_pred[:, :, curr_ind_train])
+            curr_ind_train += 1
+        elif i in bc_ind_list:
+            corr_o_pred.append(corr_o_bc_pred[:, :, curr_ind_bc])
+            curr_ind_bc += 1
+        else:
+            corr_o_pred.append(corr_o_unlab_pred[:, :, curr_ind_unlab])
+            curr_ind_unlab += 1
+    corr_o_pred = np.array(corr_o_pred)
+    corr_o_pred = np.swapaxes(corr_o_pred, 0, 1)
+    corr_o_pred = np.swapaxes(corr_o_pred, 1, 2)
+    
+    n_corr_o_unlab_vs_tau = tensor_to_avg_over_tsrc(n_corr_o_unlab_tensor, NTAU, NCFG)
+    n_corr_o_unlab_pred_vs_tau = tensor_to_avg_over_tsrc(n_corr_o_unlab_pred_tensor, NTAU, NCFG)
+
+    n_corr_o_bc_vs_tau = tensor_to_avg_over_tsrc(n_corr_o_bc_tensor, NTAU, NCFG)
+    n_corr_o_bc_pred_vs_tau = tensor_to_avg_over_tsrc(n_corr_o_bc_pred_tensor, NTAU, NCFG)
+
+    n_corr_o_uncorrected = n_corr_o_unlab_pred_vs_tau
+    n_corr_o_corrected = n_corr_o_uncorrected + n_corr_o_bc_vs_tau - n_corr_o_bc_pred_vs_tau
+    n_bias_correction_vs_tau = n_corr_o_bc_vs_tau - n_corr_o_bc_pred_vs_tau
+
+    corr_o_pred_corrected = n_corr_o_corrected * corr_o_train_stds[:, None] + corr_o_train_means[:, None]
+    corr_o_pred_uncorrected = n_corr_o_uncorrected * corr_o_train_stds[:, np.newaxis] + corr_o_train_means[:, np.newaxis]
+    corr_o_bias_correction = n_bias_correction_vs_tau * corr_o_train_stds[:, np.newaxis] + corr_o_train_means[:, np.newaxis]
+    
+    corr_o_truth = np.average(corr_o, axis=-1)
+    corr_o_train_truth = np.average(corr_o[:, :, train_ind_list], axis=-1)
+    corr_o_labeled_truth = np.average(corr_o[:, :, train_ind_list + bc_ind_list], axis=-1)
+
+    dict_data['corr_o_truth'] = corr_o_truth
+    dict_data['corr_o_pred_corrected'] = corr_o_pred_corrected
+    dict_data['corr_o_pred_uncorrected'] = corr_o_pred_uncorrected
+
+    return dict_data
+
+
+def fit_ml_data(dict_data):
+
+    dict_orig_corrs = _get_corrs_from_tags(dict_data, TAGS)
+
+    filename = args.output_dataname
+    dict_opts = make_opts(filename)
+    prior = make_priors(filename, ne=NEVEN, no=NODD)
+    dict_fits = fit_corrs(dict_orig_corrs, dict_opts, prior)
+    return dict_fits
+
+
+# =============================================================================
+#  NOISE TO SIGNAL / METRICS
+# =============================================================================
+def correlator_nts(source_times: list[int], plot: bool = False) -> npt.NDArray:
+    """
+    For some nominal values `TAU_1` and `TAU_2` (globally defined), looks at
+    the noies to signal of the correlator at these time extent values
+    """
+    global TAU_1, TAU_2
+
+    truth_data = _load_truth(
+        args.hdf5_filename, 
+        args.output_dataname,
+        source_times=source_times
+    )['corr_o_truth']    
+    print('truth_data shape:', truth_data.shape)  # [NTAU, NCFG]
+    truth_data = truth_data.T  # [NCFG, NTAU]
+    nts = np.std(truth_data, axis=0) / np.average(truth_data, axis=0)
+    print(f'Noise to signal at {TAU_1}:', nts[TAU_1])
+    print(f'Noise to signal at {TAU_2}:', nts[TAU_2])
+    if plot:
+        fig = plt.figure(figsize=(8., 8.))
+        plt.plot(nts)
+        plt.xlabel(r'Time Extent, $\tau$')
+        plt.ylabel(r'Noise to Signal Ratio of $C(\tau)$')
+        save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='corr_nts_vs_tau')
+    return nts
+
+
+def correlator_nts_vs_nsrc():
+    """
+    For the globally defined nominal values of `TAU_1` and `TAU_2`, creates a
+    plot of the noise to signal on the correlator vs number of source times 
+    in the truth-level dataset.
+    """
+    global NSRC, SHIFT, TAU_1, TAU_2
+
+    nts_tau1s = []
+    nts_tau2s = []
+    for n in range(1, NSRC+1):
+        source_times = np.random.choice(NSRC, size=n, replace=False)
+        nts = correlator_nts(source_times)
+        nts_tau1, nts_tau2 = nts[TAU_1], nts[TAU_2]
+        nts_tau1s.append(nts_tau1)
+        nts_tau2s.append(nts_tau2)
+    
+    fig = plt.figure(figsize=(8, 8))
+    plt.plot(nts_tau1s, label=rf'$\tau =$ {TAU_1}')
+    plt.plot(nts_tau2s, label=rf'$\tau =$ {TAU_2}')
+    plt.xlabel(r'$N_{\rm src}$')
+    plt.ylabel(r'Noise to signal on $C(\tau)$')
+    plt.legend()
+    save_plot(fig=fig, path=f'{args.results_dir}/plots/', filename='corr_nts_vs_nsrc')
+
+
+def fit_params_nts(filename: str, dict_data, results_dir):
     """
     Creates the noies to signal curves for fit parameters derived from truth-
     level data being fit vs number of source times included in the data.
     """
     global NSRC, SHIFT
+
     a0_nts = []
     dE0_nts = []
     for n in range(1, NSRC+1):
@@ -244,35 +474,354 @@ def nts_curve(filename, results_dir):
         a0_nts.append(nts_a)
         dE0_nts.append(nts_dE)
 
+    ml_fit = fit_ml_data(dict_data)['corr_o_pred_corrected']
+    a = ml_fit.p[filename + ':a']
+    dE = ml_fit.p[filename + ':dE']
+    nts_a  = a[0].sdev / a[0].mean
+    nts_dE  = dE[0].sdev / dE[0].mean
+
     fig = plt.figure(figsize=(8., 8.))
-    plt.plot(list(range(1, 25)), a0_nts)
+    plt.plot(list(range(1, 25)), a0_nts, label='Truth', color='blue')
+    plt.hlines(y=nts_a, xmin=1, xmax=25, label='ML', color='red')
     plt.xlabel(r'$N_{\rm src}$')
     plt.ylabel(r'Noise to Signal on $a_0$')
-    plt.title(f'shift = {SHIFT}')
+    plt.title(rf'shift = {SHIFT}, N_train = {NTRAIN}, N_BC = {NBC}')
+    plt.legend()
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename='a0_nts')
     
     fig = plt.figure(figsize=(8., 8.))
-    plt.plot(list(range(1, 25)), dE0_nts)
+    plt.plot(list(range(1, 25)), dE0_nts, label='Truth', color='blue')
+    plt.hlines(y=nts_dE, xmin=1, xmax=25, label='ML', color='red')
     plt.xlabel(r'$N_{\rm src}$')
     plt.ylabel(r'Noise to Signal on $dE_0$')
-    plt.title(f'shift = {SHIFT}')
+    plt.title(rf'shift = {SHIFT}, N_train = {NTRAIN}, N_BC = {NBC}')
+    plt.legend()
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename='dE0_nts')
 
 
-def ml_pred_nts():
-    global REG_METHOD
-    reg_method = REG_METHOD
+# =============================================================================
+#  MACHINE LEARNING
+# =============================================================================
+def prepare_data(
+    dict_data: dict[str, torch.Tensor]
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Standardizes the two-point strange (input) and light (output) correlator 
+    data for input to a model for training.
+
+    Args:
+        dict_data: Dictionary of pre-processed correlator data
+
+    Returns:
+        Training input and output data
+    """
+    input_train = dict_data["corr_i_train_tensor"]
+    output_train = dict_data["corr_o_train_tensor"]
+    input_train_means = dict_data["corr_i_train_means"]
+    output_train_means = dict_data["corr_o_train_means"]
+    input_train_stds = dict_data["corr_i_train_stds"]
+    output_train_stds = dict_data["corr_o_train_stds"]
+
+    corr_2pt_s_train = (input_train - input_train_means) / input_train_stds
+    corr_2pt_l_train = (output_train - output_train_means) / output_train_stds
+
+    return corr_2pt_s_train, corr_2pt_l_train
 
 
+def prepare_data(
+    dict_data: dict[str, torch.Tensor]
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Standardizes the two-point strange (input) and light (output) correlator 
+    data for input to a model for training.
+
+    Args:
+        dict_data: Dictionary of pre-processed correlator data
+
+    Returns:
+        Training input and output data
+    """
+    input_train = dict_data["corr_i_train_tensor"]
+    output_train = dict_data["corr_o_train_tensor"]
+    input_train_means = dict_data["corr_i_train_means"]
+    output_train_means = dict_data["corr_o_train_means"]
+    input_train_stds = dict_data["corr_i_train_stds"]
+    output_train_stds = dict_data["corr_o_train_stds"]
+
+    corr_2pt_s_train = (input_train - input_train_means) / input_train_stds
+    corr_2pt_l_train = (output_train - output_train_means) / output_train_stds
+
+    return corr_2pt_s_train, corr_2pt_l_train
+
+
+def make_model(
+    reg_method: str,
+    seed: int
+) -> Union[TorchRegressor, SklearnRegressor, list[SklearnRegressor]]:
+    """
+    Prepares a regression model to be trained.
+
+    Args:
+        reg_method: Name of method to use for regression
+        seed: Integer seed to use for reproducibility
+
+    Returns:
+        model: An initialized PyTorch or SkLearn regressor
+    """
+    torch.manual_seed(seed)
+    global NTAU
+
+    if reg_method in TORCH_REGRESSORS.keys():
+        print(f'Using {reg_method} for regression.')
+        if reg_method == 'MLP':
+            model = MLP(
+                input_dim = NTAU, 
+                output_dim = NTAU, 
+                hidden_dims = [NTAU // 4], 
+                batch_norm = False
+            )
+        elif reg_method == 'Linear':
+            model = LinearModel(
+                input_dim = NTAU, 
+                output_dim = NTAU
+            )
+        elif reg_method == 'CNN':
+            model = CNN(
+                in_channels = 1, 
+                out_channels = 1, 
+                hidden_channels = [1], 
+                kernel_size = 15, 
+                batch_norm = False
+            )
+        elif reg_method == 'Transformer':
+            model = Transformer(
+                input_dim = 1, 
+                num_heads = 1
+            )
+        elif reg_method == 'Identity':
+            model = torch.nn.Identity
+    else:
+        raise KeyError(f"Unknown regression method '{reg_method}'.")
+    return model
+
+
+def loss_func(
+    prediction: torch.Tensor, 
+    target: torch.Tensor,
+    l2_coeff: float,
+    model: torch.nn.Module
+) -> torch.FloatTensor:
+    """
+    MSE loss with :math:`\ell_2` regularization. 
+
+    Args:
+        prediction: Data predicted by model
+        target: Desired output data
+        l2_coeff: Coefficient for regularization
+        model: Neural net being trained
+
+    Returns:
+        Scalar-valued loss
+    """
+    loss = F.mse_loss(prediction, target)
+    l2_reg = l2_regularization(l2_coeff, model)
+    
+    return loss + l2_reg
+
+
+def train_torch_network(
+    input_data: torch.Tensor, 
+    output_data: torch.Tensor,
+    lr: float,
+    l2_coeff: float,
+    training_steps: int,
+    model: TorchRegressor,
+    results_dir: str,
+    track_corrs: bool
+) -> TorchRegressor:
+    """
+    Trains the neural network.
+    
+    For neural networks implemented via PyTorch, training is done according to 
+    MSE loss with :math:`\ell^2` regularization. The training loss curve is 
+    saved and plotted.
+
+    Args:
+        input_data: Input training data
+        output_data: Output training data
+        lr: Base learning rate
+        l2_coeff: Regularization coefficient
+        training_steps: Number of iterations for training
+        model: Neural net to be trained
+        results_dir: Directory in which plots from training will be saved
+    
+    Returns:
+        Trained model
+    """
+    model.train()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    losses = []
+
+    for i in range(training_steps):
+        lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
+
+        prediction = model(input_data)
+        loss = loss_func(prediction, output_data, l2_coeff, model)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        if i % 100 == 0:
+            print('Step:', i)
+            print(f'Loss: {loss.item():.12f} | lr: {lr2:.12f}')
+        losses.append(loss.item())
+    
+    # Plot loss
+    plot_loss(losses, results_dir)
+    
+    return model
+
+
+# =============================================================================
+#  METRICS
+# =============================================================================
+def combined_obs(dict_data):
+    """
+    Weighted average of observable over the BC and LD subsets.
+    
+    Implemented as in equation (16) of [arxiv 1909.10990].
+    """
+    obs_pred_bc = dict_data['corr_o_pred_corrected']
+    raise NotImplementedError('Ignored for now...')
+    
+
+
+def cost_metric(dict_data, results_dir: str):
+    """
+    Cost function as implemented in equation (15) of [arxiv 1909.10990],
+    where the term `N_in` is not included.
+
+    Note: for now, we take the 'sigma_comb' to just be the variance of the
+    bias-corrected, ML prediction instead of a weighted average over subsets.
+    """
+    global NTRAIN, NBC, NSRC, TAU_1
+
+    num_ld = NTRAIN + NBC
+    num_uld = NSRC - num_ld
+
+    
+    corr_ul = tensor_to_avg_over_tsrc(dict_data['corr_o_unlab_tensor'], NTAU, NCFG)
+    corr_pred_bc = dict_data['corr_o_pred_corrected']
+    print('corr_ul.shape:', corr_ul.shape)
+    print('corr_o_pred_corrected.shape:', corr_pred_bc.shape)
+    ratio = np.var(corr_ul, axis=-1) / np.var(corr_pred_bc, axis=-1)
+    num_eff = ratio * num_uld
+    metric = (NBC + NTRAIN) / num_eff
+
+    print('METRICS at TAU = ', TAU_1)
+    print('EFFECTIVE NUMBER OF SOURCE TIMES:', num_eff[TAU_1])
+    print('COST METRIC:', metric[TAU_1])
+
+    # Compare numbers in denominator
+    ts = 986
+    td = 4960
+    N_in = 24
+
+    print('t_s * N_in:', ts * N_in)
+    print('td * N_ul * ratio', td * num_uld * ratio[TAU_1])
+    ts_times_N_in = ts * N_in  # constant
+    td_nul_ratio = td * num_uld * ratio
+    
+    fig = plt.figure(figsize=(8, 8))
+    plt.hlines(y=ts_times_N_in, xmin=0, xmax=NTAU, label=rf'$t_s N_\mathrm{{in}}$')
+    plt.plot(td_nul_ratio, label=rf'$t_d N_\mathrm{{ul}} \frac{{\sigma^2_\mathrm{{ul}}}}{{\sigma^2_\mathrm{{comb}}}}$')
+    plt.xlabel(rf'$\tau$')
+    plt.legend(loc='best', frameon=False)
+    save_plot(fig, path=f'{args.results_dir}/plots/', filename='Nsrc_vs_tau')
+
+
+    return metric
 
 
 # =============================================================================
 def main(args):
+    global STRANGE_MASS, HEAVY_MASSES
+    global SOURCE_TIME_INDS, REG_METHOD
+
     set_np_seed(args.seed)
     torch.set_default_dtype(torch.float64)
 
-    nts_curve(filename=args.output_dataname, results_dir=args.results_dir)
+    # Compare cost metric for different mass combinations
+    mi2 = STRANGE_MASS
+    mo2 = STRANGE_MASS
+    mo1 = 0.164
+    fig = plt.figure(figsize=(8, 8))
+    for mi1 in HEAVY_MASSES:
+        print(f'Input Masses: mi1 = {mi1}, mi2 = {mi2}')
+        print(f'Output Masses: mo1 = {mo1}, mo2 = {mo2}')
 
+        input_dataname = f'P5-P5_RW_RW_d_d_m{mi1}_m{mi2}_p000'
+        output_dataname = f'P5-P5_RW_RW_d_d_m{mo1}_m{mo2}_p000'
+
+        dict_data = infer_ml_data(input_dataname, output_dataname)
+        metric = cost_metric(dict_data, results_dir=args.results_dir)
+        plt.plot(metric, lw=0.75, label=rf'$({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
+    plt.xlabel(r'$\tau$')
+    plt.ylabel('Cost Metric')
+    plt.title(f'{REG_METHOD} Prediction Costs')
+    plt.legend(frameon=False, loc='best')
+    save_plot(fig, path=f'{args.results_dir}/plots/', filename='cost_metric_vs_tau')
+
+    # Strange to light comparison
+    mi2 = STRANGE_MASS
+    mo2 = LIGHT_MASS
+    fig = plt.figure(figsize=(8, 8))
+    for (mi1, mo1) in zip(HEAVY_MASSES, HEAVY_MASSES):
+        print(f'Input Masses: mi1 = {mi1}, mi2 = {mi2}')
+        print(f'Output Masses: mo1 = {mo1}, mo2 = {mo2}')
+
+        input_dataname = f'P5-P5_RW_RW_d_d_m{mi1}_m{mi2}_p000'
+        output_dataname = f'P5-P5_RW_RW_d_d_m{mo1}_m{mo2}_p000'
+
+        dict_data = infer_ml_data(input_dataname, output_dataname)
+        metric = cost_metric(dict_data, results_dir=args.results_dir)
+        plt.plot(metric, lw=0.75, label=rf'$({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
+    plt.xlabel(r'$\tau$')
+    plt.ylabel('Cost Metric')
+    plt.title(f'Strange to Light Prediction Costs with {REG_METHOD}')
+    plt.legend(frameon=False, loc='best')
+    save_plot(fig, path=f'{args.results_dir}/plots/', filename='strange2light_cost_metric')
+
+
+    # Compare cost of ML vs Identity (baseline)
+    mi1 = 0.548
+    mi2 = STRANGE_MASS
+    mo1 = 0.164
+    mo2 = STRANGE_MASS
+    
+    input_dataname = f'P5-P5_RW_RW_d_d_m{mi1}_m{mi2}_p000'
+    output_dataname = f'P5-P5_RW_RW_d_d_m{mo1}_m{mo2}_p000'
+
+    fig = plt.figure(figsize=(8, 8))
+
+    REG_METHODS = ['MLP', 'CNN', 'Linear']
+    for method in REG_METHODS:
+        REG_METHOD = method
+        dict_data = infer_ml_data(input_dataname, output_dataname)
+        metric = cost_metric(dict_data, results_dir=args.results_dir)
+        plt.plot(metric, lw=0.75, label=REG_METHOD)
+    
+    REG_METHOD = 'Identity'
+    dict_data = infer_ml_data(input_dataname, output_dataname)
+    metric = cost_metric(dict_data, results_dir=args.results_dir)
+    plt.plot(metric, lw=0.75, label=rf'Identity')
+    
+    plt.xlabel(r'$\tau$')
+    plt.ylabel('Cost Metric')
+    plt.title(rf'Prediction cost for $({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
+    plt.legend(frameon=False, loc='best')
+    save_plot(fig, path=f'{args.results_dir}/plots/', filename='compare_metric_vs_tau')
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -281,7 +830,11 @@ if __name__ == '__main__':
     add('--seed', type=int, default=42)
     add('--hdf5_filename', type=str, 
         default='../data/l64192a_run2_810-6996_1028cfgs.hdf5')
+    add('--input_dataname', type=str)
     add('--output_dataname', type=str)
+    add('--lr', type=float, default=0.01)
+    add('--l2_coeff', type=float, default=1e-2)
+    add('--training_steps', type=int, default=500) 
     add('--results_dir', type=str)
 
     args = parser.parse_args()
