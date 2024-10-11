@@ -15,7 +15,7 @@ bc_ind_list="[3,6,12,15,18]"
 
 #torch_reg_methods=("Linear" "MLP" "CNN" "Transformer" )
 #sklearn_reg_methods=("DTR" "RFR" "GBR" "LinearRegression" "Ridge")
-reg_methods=("Linear" "MLP") #"CNN" "DTR")
+reg_methods=("Identity" "Transformer") #"CNN" "DTR")
 modify_ratio=1
 compare_ratio_method=1
 compare_ml_ratio_method=1

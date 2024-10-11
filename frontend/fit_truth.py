@@ -19,7 +19,6 @@ from processing.conversion import tensor_to_avg_over_tsrc
 from analysis.fitting import fit_corrs
 from regression.torch_regressors import *
 from regression.inference import predict
-from regression.plotting import plot_loss
 from regression.utils import adjust_learning_rate, l2_regularization
 
 
@@ -87,10 +86,11 @@ MAX_ITERS: int = 5_000
 AVG_TSRC: bool = False
 
 if __name__ == '__main__':
-    print('FITTING CORRELATORS \n data dimensions:')
+    print('RUNNING METRICS \n data dimensions:')
     print('\t Number of time extents:', NTAU)
     print('\t Number of source times:', NSRC)
     print('\t Number of configurations:', NCFG)
+    print('='*120)
 
     set_plot_preferences()
 
@@ -246,6 +246,32 @@ def _load_truth(
     return {'corr_o_truth': corr_o_truth}
 
 
+def prepare_data(
+    dict_data: dict[str, torch.Tensor]
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Standardizes the two-point strange (input) and light (output) correlator 
+    data for input to a model for training.
+
+    Args:
+        dict_data: Dictionary of pre-processed correlator data
+
+    Returns:
+        Training input and output data
+    """
+    input_train = dict_data["corr_i_train_tensor"]
+    output_train = dict_data["corr_o_train_tensor"]
+    input_train_means = dict_data["corr_i_train_means"]
+    output_train_means = dict_data["corr_o_train_means"]
+    input_train_stds = dict_data["corr_i_train_stds"]
+    output_train_stds = dict_data["corr_o_train_stds"]
+
+    corr_2pt_s_train = (input_train - input_train_means) / input_train_stds
+    corr_2pt_l_train = (output_train - output_train_means) / output_train_stds
+
+    return corr_2pt_s_train, corr_2pt_l_train
+
+
 def fit_truth_data(source_times: list[int]):
     global NCFG, NSRC, NTAU, TAGS
 
@@ -262,25 +288,155 @@ def fit_truth_data(source_times: list[int]):
     return dict_fits
 
 
-def infer_ml_data(input_dataname, output_dataname):
+def fit_ml_data(dict_data):
+    dict_orig_corrs = _get_corrs_from_tags(dict_data, TAGS)
+
+    filename = args.output_dataname
+    dict_opts = make_opts(filename)
+    prior = make_priors(filename, ne=NEVEN, no=NODD)
+    dict_fits = fit_corrs(dict_orig_corrs, dict_opts, prior)
+    return dict_fits
+
+
+# =============================================================================
+#  MACHINE LEARNING
+# =============================================================================
+def make_model(
+    reg_method: str,
+    seed: int
+) -> Union[TorchRegressor, SklearnRegressor, list[SklearnRegressor]]:
+    """
+    Prepares a regression model to be trained.
+
+    Args:
+        reg_method: Name of method to use for regression
+        seed: Integer seed to use for reproducibility
+
+    Returns:
+        model: An initialized PyTorch or SkLearn regressor
+    """
+    torch.manual_seed(seed)
+    global NTAU
+
+    if reg_method in TORCH_REGRESSORS.keys():
+        print(f'Using {reg_method} for regression.')
+        if reg_method == 'MLP':
+            model = MLP(
+                input_dim = NTAU, 
+                output_dim = NTAU, 
+                hidden_dims = [NTAU // 4], 
+                batch_norm = False
+            )
+        elif reg_method == 'Linear':
+            model = LinearModel(
+                input_dim = NTAU, 
+                output_dim = NTAU
+            )
+        elif reg_method == 'CNN':
+            model = CNN(
+                in_channels = 1, 
+                out_channels = 1, 
+                hidden_channels = [1], 
+                kernel_size = 15, 
+                batch_norm = False
+            )
+        elif reg_method == 'Transformer':
+            model = Transformer(
+                input_dim = 1, 
+                num_heads = 1
+            )
+        elif reg_method == 'Identity':
+            model = torch.nn.Identity
+    else:
+        raise KeyError(f"Unknown regression method '{reg_method}'.")
+    return model
+
+
+def loss_func(
+    prediction: torch.Tensor, 
+    target: torch.Tensor,
+    l2_coeff: float,
+    model: torch.nn.Module
+) -> torch.FloatTensor:
+    """
+    MSE loss with :math:`\ell_2` regularization. 
+
+    Args:
+        prediction: Data predicted by model
+        target: Desired output data
+        l2_coeff: Coefficient for regularization
+        model: Neural net being trained
+
+    Returns:
+        Scalar-valued loss
+    """
+    loss = F.mse_loss(prediction, target)
+    l2_reg = l2_regularization(l2_coeff, model)
+    
+    return loss + l2_reg
+
+
+def train_torch_network(
+    input_data: torch.Tensor, 
+    output_data: torch.Tensor,
+    lr: float,
+    l2_coeff: float,
+    training_steps: int,
+    model: TorchRegressor,
+    results_dir: str
+) -> TorchRegressor:
+    """
+    Trains the neural network.
+    
+    For neural networks implemented via PyTorch, training is done according to 
+    MSE loss with :math:`\ell^2` regularization. The training loss curve is 
+    saved and plotted.
+
+    Args:
+        input_data: Input training data
+        output_data: Output training data
+        lr: Base learning rate
+        l2_coeff: Regularization coefficient
+        training_steps: Number of iterations for training
+        model: Neural net to be trained
+        results_dir: Directory in which plots from training will be saved
+    
+    Returns:
+        Trained model
+    """
+    model.train()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    losses = []
+
+    for i in range(training_steps):
+        lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
+
+        prediction = model(input_data)
+        loss = loss_func(prediction, output_data, l2_coeff, model)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        if i % 100 == 0:
+            print('Step:', i)
+            print(f'Loss: {loss.item():.12f} | lr: {lr2:.12f}')
+        losses.append(loss.item())
+    
+    return model
+
+
+def infer_ml_data(
+    input_dataname: str, 
+    output_dataname: str,
+    train_ind_list: list[int],
+    bc_ind_list: list[int],
+    unlab_ind_list: list[int],
+    reg_method: str
+) -> dict[str, npt.NDArray]:
     """Fits the ML model and then fits inferred data"""
-    global NSRC, NTRAIN, NBC, REG_METHOD
+    global NSRC, NTRAIN, NBC
 
-    total_inds: set[int] = {n for n in range(24)}
-    labeled_inds = np.random.choice(NSRC, size=NTRAIN + NBC, replace=False)
-    unlab_inds: set[int] = list(total_inds - set(labeled_inds))
-    bc_inds = np.random.choice(labeled_inds, size=NBC, replace=False)
-    train_inds = set(labeled_inds) - set(bc_inds)
-
-    train_ind_list = list(train_inds)
-    bc_ind_list = list(bc_inds)
-    unlab_ind_list = list(unlab_inds)
-
-    print(f'Fitting ML model with index subsets:')
-    print('Train indices =', train_ind_list)
-    print('Bias correction indices =', bc_ind_list)
-    print('Testing indices =', unlab_ind_list)
-
+    print('infer ml data using reg_method', reg_method)
     corr_i, corr_o = get_corrs(
         args.hdf5_filename,
         [input_dataname, output_dataname],
@@ -299,9 +455,9 @@ def infer_ml_data(input_dataname, output_dataname):
 
     inputs, outputs = prepare_data(dict_data)
     
-    model = make_model(REG_METHOD, args.seed)
+    model = make_model(reg_method, args.seed)
 
-    if REG_METHOD == 'Identity':
+    if reg_method == 'Identity':
         trained_model = model
     else:
         trained_model = train_torch_network(
@@ -310,8 +466,7 @@ def infer_ml_data(input_dataname, output_dataname):
             l2_coeff = args.l2_coeff,
             training_steps = args.training_steps,
             model = model,
-            results_dir = args.results_dir,
-            track_corrs = False
+            results_dir = args.results_dir
         )
 
     n_corr_i_train_tensor = (dict_data["corr_i_train_tensor"] - dict_data["corr_i_train_means"]) / dict_data["corr_i_train_stds"]
@@ -319,7 +474,7 @@ def infer_ml_data(input_dataname, output_dataname):
     dict_results = predict(
         n_corr_i_train_tensor = n_corr_i_train_tensor,
         model = trained_model,
-        reg_method = REG_METHOD,
+        reg_method = reg_method,
         dict_data = dict_data
     )
 
@@ -350,6 +505,7 @@ def infer_ml_data(input_dataname, output_dataname):
     curr_ind_train = 0
     curr_ind_bc = 0
     curr_ind_unlab = 0
+    # Separate predicted data by subsets again
     for i in range(NSRC):
         if i in train_ind_list:
             corr_o_pred.append(corr_o_train_pred[:, :, curr_ind_train])
@@ -387,17 +543,6 @@ def infer_ml_data(input_dataname, output_dataname):
     dict_data['corr_o_pred_uncorrected'] = corr_o_pred_uncorrected
 
     return dict_data
-
-
-def fit_ml_data(dict_data):
-
-    dict_orig_corrs = _get_corrs_from_tags(dict_data, TAGS)
-
-    filename = args.output_dataname
-    dict_opts = make_opts(filename)
-    prior = make_priors(filename, ne=NEVEN, no=NODD)
-    dict_fits = fit_corrs(dict_orig_corrs, dict_opts, prior)
-    return dict_fits
 
 
 # =============================================================================
@@ -500,189 +645,6 @@ def fit_params_nts(filename: str, dict_data, results_dir):
 
 
 # =============================================================================
-#  MACHINE LEARNING
-# =============================================================================
-def prepare_data(
-    dict_data: dict[str, torch.Tensor]
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """
-    Standardizes the two-point strange (input) and light (output) correlator 
-    data for input to a model for training.
-
-    Args:
-        dict_data: Dictionary of pre-processed correlator data
-
-    Returns:
-        Training input and output data
-    """
-    input_train = dict_data["corr_i_train_tensor"]
-    output_train = dict_data["corr_o_train_tensor"]
-    input_train_means = dict_data["corr_i_train_means"]
-    output_train_means = dict_data["corr_o_train_means"]
-    input_train_stds = dict_data["corr_i_train_stds"]
-    output_train_stds = dict_data["corr_o_train_stds"]
-
-    corr_2pt_s_train = (input_train - input_train_means) / input_train_stds
-    corr_2pt_l_train = (output_train - output_train_means) / output_train_stds
-
-    return corr_2pt_s_train, corr_2pt_l_train
-
-
-def prepare_data(
-    dict_data: dict[str, torch.Tensor]
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """
-    Standardizes the two-point strange (input) and light (output) correlator 
-    data for input to a model for training.
-
-    Args:
-        dict_data: Dictionary of pre-processed correlator data
-
-    Returns:
-        Training input and output data
-    """
-    input_train = dict_data["corr_i_train_tensor"]
-    output_train = dict_data["corr_o_train_tensor"]
-    input_train_means = dict_data["corr_i_train_means"]
-    output_train_means = dict_data["corr_o_train_means"]
-    input_train_stds = dict_data["corr_i_train_stds"]
-    output_train_stds = dict_data["corr_o_train_stds"]
-
-    corr_2pt_s_train = (input_train - input_train_means) / input_train_stds
-    corr_2pt_l_train = (output_train - output_train_means) / output_train_stds
-
-    return corr_2pt_s_train, corr_2pt_l_train
-
-
-def make_model(
-    reg_method: str,
-    seed: int
-) -> Union[TorchRegressor, SklearnRegressor, list[SklearnRegressor]]:
-    """
-    Prepares a regression model to be trained.
-
-    Args:
-        reg_method: Name of method to use for regression
-        seed: Integer seed to use for reproducibility
-
-    Returns:
-        model: An initialized PyTorch or SkLearn regressor
-    """
-    torch.manual_seed(seed)
-    global NTAU
-
-    if reg_method in TORCH_REGRESSORS.keys():
-        print(f'Using {reg_method} for regression.')
-        if reg_method == 'MLP':
-            model = MLP(
-                input_dim = NTAU, 
-                output_dim = NTAU, 
-                hidden_dims = [NTAU // 4], 
-                batch_norm = False
-            )
-        elif reg_method == 'Linear':
-            model = LinearModel(
-                input_dim = NTAU, 
-                output_dim = NTAU
-            )
-        elif reg_method == 'CNN':
-            model = CNN(
-                in_channels = 1, 
-                out_channels = 1, 
-                hidden_channels = [1], 
-                kernel_size = 15, 
-                batch_norm = False
-            )
-        elif reg_method == 'Transformer':
-            model = Transformer(
-                input_dim = 1, 
-                num_heads = 1
-            )
-        elif reg_method == 'Identity':
-            model = torch.nn.Identity
-    else:
-        raise KeyError(f"Unknown regression method '{reg_method}'.")
-    return model
-
-
-def loss_func(
-    prediction: torch.Tensor, 
-    target: torch.Tensor,
-    l2_coeff: float,
-    model: torch.nn.Module
-) -> torch.FloatTensor:
-    """
-    MSE loss with :math:`\ell_2` regularization. 
-
-    Args:
-        prediction: Data predicted by model
-        target: Desired output data
-        l2_coeff: Coefficient for regularization
-        model: Neural net being trained
-
-    Returns:
-        Scalar-valued loss
-    """
-    loss = F.mse_loss(prediction, target)
-    l2_reg = l2_regularization(l2_coeff, model)
-    
-    return loss + l2_reg
-
-
-def train_torch_network(
-    input_data: torch.Tensor, 
-    output_data: torch.Tensor,
-    lr: float,
-    l2_coeff: float,
-    training_steps: int,
-    model: TorchRegressor,
-    results_dir: str,
-    track_corrs: bool
-) -> TorchRegressor:
-    """
-    Trains the neural network.
-    
-    For neural networks implemented via PyTorch, training is done according to 
-    MSE loss with :math:`\ell^2` regularization. The training loss curve is 
-    saved and plotted.
-
-    Args:
-        input_data: Input training data
-        output_data: Output training data
-        lr: Base learning rate
-        l2_coeff: Regularization coefficient
-        training_steps: Number of iterations for training
-        model: Neural net to be trained
-        results_dir: Directory in which plots from training will be saved
-    
-    Returns:
-        Trained model
-    """
-    model.train()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    losses = []
-
-    for i in range(training_steps):
-        lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
-
-        prediction = model(input_data)
-        loss = loss_func(prediction, output_data, l2_coeff, model)
-
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        if i % 100 == 0:
-            print('Step:', i)
-            print(f'Loss: {loss.item():.12f} | lr: {lr2:.12f}')
-        losses.append(loss.item())
-    
-    # Plot loss
-    plot_loss(losses, results_dir)
-    
-    return model
-
-
-# =============================================================================
 #  METRICS
 # =============================================================================
 def combined_obs(dict_data):
@@ -696,7 +658,7 @@ def combined_obs(dict_data):
     
 
 
-def cost_metric(dict_data, results_dir: str):
+def cost_metric(dict_data):
     """
     Cost function as implemented in equation (15) of [arxiv 1909.10990],
     where the term `N_in` is not included.
@@ -718,27 +680,26 @@ def cost_metric(dict_data, results_dir: str):
     num_eff = ratio * num_uld
     metric = (NBC + NTRAIN) / num_eff
 
-    print('METRICS at TAU = ', TAU_1)
-    print('EFFECTIVE NUMBER OF SOURCE TIMES:', num_eff[TAU_1])
-    print('COST METRIC:', metric[TAU_1])
+    print('METRICS at TAU =', TAU_1)
+    print('\tEFFECTIVE NUMBER OF SOURCE TIMES:', num_eff[TAU_1])
+    print('\tCOST METRIC:', metric[TAU_1])
 
     # Compare numbers in denominator
     ts = 986
     td = 4960
     N_in = 24
 
-    print('t_s * N_in:', ts * N_in)
-    print('td * N_ul * ratio', td * num_uld * ratio[TAU_1])
+    print('\tt_s * N_in:', ts * N_in)
+    print('\ttd * N_ul * ratio', td * num_uld * ratio[TAU_1])
     ts_times_N_in = ts * N_in  # constant
     td_nul_ratio = td * num_uld * ratio
-    
     fig = plt.figure(figsize=(8, 8))
-    plt.hlines(y=ts_times_N_in, xmin=0, xmax=NTAU, label=rf'$t_s N_\mathrm{{in}}$')
+    plt.hlines(y=ts_times_N_in, xmin=0, xmax=NTAU, label=rf'$t_s N_\mathrm{{in}}$', colors='red')
     plt.plot(td_nul_ratio, label=rf'$t_d N_\mathrm{{ul}} \frac{{\sigma^2_\mathrm{{ul}}}}{{\sigma^2_\mathrm{{comb}}}}$')
     plt.xlabel(rf'$\tau$')
-    plt.legend(loc='best', frameon=False)
+    plt.ylabel(rf'$N_{{\rm eff}}$')
+    plt.legend(loc='upper center', frameon=False)
     save_plot(fig, path=f'{args.results_dir}/plots/', filename='Nsrc_vs_tau')
-
 
     return metric
 
@@ -746,81 +707,124 @@ def cost_metric(dict_data, results_dir: str):
 # =============================================================================
 def main(args):
     global STRANGE_MASS, HEAVY_MASSES
-    global SOURCE_TIME_INDS, REG_METHOD
+    global SOURCE_TIME_INDS
+    global NSRC, NTRAIN, NBC
+
+    global REG_METHOD
+    reg_method = REG_METHOD
 
     set_np_seed(args.seed)
     torch.set_default_dtype(torch.float64)
 
+    # Choose source time subsets
+    total_inds: set[int] = {n for n in range(24)}
+    labeled_inds = np.random.choice(NSRC, size=NTRAIN + NBC, replace=False)
+    unlab_inds: set[int] = list(total_inds - set(labeled_inds))
+    bc_inds = np.random.choice(labeled_inds, size=NBC, replace=False)
+    train_inds = set(labeled_inds) - set(bc_inds)
+
+    train_ind_list = list(train_inds)
+    bc_ind_list = list(bc_inds)
+    unlab_ind_list = list(unlab_inds)
+    print('SOURCE TIME ALLOCATIONS:')
+    print(f'NTRAIN = {NTRAIN}, NBC = {NBC}, NUL = {NSRC - NTRAIN - NBC}')
+    print('Training indices:', train_ind_list)
+    print('Bias correction indices:', bc_ind_list)
+    print('Testing indices:', unlab_ind_list)
+
     # Compare cost metric for different mass combinations
-    mi2 = STRANGE_MASS
-    mo2 = STRANGE_MASS
-    mo1 = 0.164
-    fig = plt.figure(figsize=(8, 8))
-    for mi1 in HEAVY_MASSES:
-        print(f'Input Masses: mi1 = {mi1}, mi2 = {mi2}')
-        print(f'Output Masses: mo1 = {mo1}, mo2 = {mo2}')
+    def compare_heavy_masses() -> None:
+        mi2 = STRANGE_MASS
+        mo2 = STRANGE_MASS
+        mo1 = 0.164
+        fig = plt.figure(figsize=(8, 8))
+        print('-'*120)
+        print('HEAVY MASS COMPARISON')
+        for mi1 in HEAVY_MASSES:
+            print()
+            print(f'Input Masses: mi1 = {mi1}, mi2 = {mi2}')
+            print(f'Output Masses: mo1 = {mo1}, mo2 = {mo2}')
 
-        input_dataname = f'P5-P5_RW_RW_d_d_m{mi1}_m{mi2}_p000'
-        output_dataname = f'P5-P5_RW_RW_d_d_m{mo1}_m{mo2}_p000'
+            input_dataname = f'P5-P5_RW_RW_d_d_m{mi1}_m{mi2}_p000'
+            output_dataname = f'P5-P5_RW_RW_d_d_m{mo1}_m{mo2}_p000'
 
-        dict_data = infer_ml_data(input_dataname, output_dataname)
-        metric = cost_metric(dict_data, results_dir=args.results_dir)
-        plt.plot(metric, lw=0.75, label=rf'$({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
-    plt.xlabel(r'$\tau$')
-    plt.ylabel('Cost Metric')
-    plt.title(f'{REG_METHOD} Prediction Costs')
-    plt.legend(frameon=False, loc='best')
-    save_plot(fig, path=f'{args.results_dir}/plots/', filename='cost_metric_vs_tau')
+            dict_data = infer_ml_data(input_dataname, output_dataname, 
+                train_ind_list, bc_ind_list, unlab_ind_list,
+                reg_method)
+            metric = cost_metric(dict_data)
+            plt.plot(metric, lw=0.75, label=rf'$({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
+        plt.xlabel(r'$\tau$')
+        plt.ylabel('Cost Metric')
+        plt.title(f'{reg_method} Prediction Costs')
+        plt.legend(frameon=False, loc='best', prop={'size': 8})
+        save_plot(fig, path=f'{args.results_dir}/plots/', filename='cost_metric_vs_tau')
+
+    compare_heavy_masses()
 
     # Strange to light comparison
-    mi2 = STRANGE_MASS
-    mo2 = LIGHT_MASS
-    fig = plt.figure(figsize=(8, 8))
-    for (mi1, mo1) in zip(HEAVY_MASSES, HEAVY_MASSES):
+    def compare_strange_to_light() -> None:
+        mi2 = STRANGE_MASS
+        mo2 = LIGHT_MASS
+        fig = plt.figure(figsize=(8, 8))
+        print('-'*120)
+        print('STRANGE TO LIGHT COMPARISON')
+        for (mi1, mo1) in zip(HEAVY_MASSES, HEAVY_MASSES):
+            print()
+            print(f'Input Masses: mi1 = {mi1}, mi2 = {mi2}')
+            print(f'Output Masses: mo1 = {mo1}, mo2 = {mo2}')
+
+            input_dataname = f'P5-P5_RW_RW_d_d_m{mi1}_m{mi2}_p000'
+            output_dataname = f'P5-P5_RW_RW_d_d_m{mo1}_m{mo2}_p000'
+
+            dict_data = infer_ml_data(input_dataname, output_dataname, 
+                train_ind_list, bc_ind_list, unlab_ind_list,
+                reg_method)
+            metric = cost_metric(dict_data)
+            plt.plot(metric, lw=0.75, label=rf'$({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
+        plt.xlabel(r'$\tau$')
+        plt.ylabel('Cost Metric')
+        plt.title(f'Strange to Light Prediction Costs with {reg_method}')
+        plt.legend(frameon=False, loc='best', prop={'size': 8})
+        save_plot(fig, path=f'{args.results_dir}/plots/', filename='strange2light_cost_metric')
+
+    compare_strange_to_light()
+
+    # Compare cost of ML vs Identity (baseline)
+    def compare_ml_vs_identity() -> None:
+        #mi1 = 0.548
+        #mi2 = STRANGE_MASS
+        #mo1 = 0.164
+        #mo2 = STRANGE_MASS
+        mi1 = 0.843
+        mi2 = STRANGE_MASS
+        mo1 = 0.843
+        mo2 = LIGHT_MASS
         print(f'Input Masses: mi1 = {mi1}, mi2 = {mi2}')
         print(f'Output Masses: mo1 = {mo1}, mo2 = {mo2}')
-
+        
         input_dataname = f'P5-P5_RW_RW_d_d_m{mi1}_m{mi2}_p000'
         output_dataname = f'P5-P5_RW_RW_d_d_m{mo1}_m{mo2}_p000'
 
-        dict_data = infer_ml_data(input_dataname, output_dataname)
-        metric = cost_metric(dict_data, results_dir=args.results_dir)
-        plt.plot(metric, lw=0.75, label=rf'$({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
-    plt.xlabel(r'$\tau$')
-    plt.ylabel('Cost Metric')
-    plt.title(f'Strange to Light Prediction Costs with {REG_METHOD}')
-    plt.legend(frameon=False, loc='best')
-    save_plot(fig, path=f'{args.results_dir}/plots/', filename='strange2light_cost_metric')
-
-
-    # Compare cost of ML vs Identity (baseline)
-    mi1 = 0.548
-    mi2 = STRANGE_MASS
-    mo1 = 0.164
-    mo2 = STRANGE_MASS
+        fig = plt.figure(figsize=(8, 8))
+        print('-'*120)
+        print('REG METHODS COMPARISON')
+        nonlocal reg_method
+        reg_methods = ['MLP', 'CNN', 'Linear', 'Identity']
+        for reg_method in reg_methods:
+            print('\nMethod:', reg_method)
+            dict_data = infer_ml_data(input_dataname, output_dataname, 
+                train_ind_list, bc_ind_list, unlab_ind_list,
+                reg_method)
+            metric = cost_metric(dict_data)
+            plt.plot(metric, lw=0.75, label=reg_method)
+        
+        plt.xlabel(r'$\tau$')
+        plt.ylabel('Cost Metric')
+        plt.title(rf'Prediction cost for $({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
+        plt.legend(frameon=False, loc='best', prop={'size': 8})
+        save_plot(fig, path=f'{args.results_dir}/plots/', filename='compare_metric_vs_tau')
     
-    input_dataname = f'P5-P5_RW_RW_d_d_m{mi1}_m{mi2}_p000'
-    output_dataname = f'P5-P5_RW_RW_d_d_m{mo1}_m{mo2}_p000'
-
-    fig = plt.figure(figsize=(8, 8))
-
-    REG_METHODS = ['MLP', 'CNN', 'Linear']
-    for method in REG_METHODS:
-        REG_METHOD = method
-        dict_data = infer_ml_data(input_dataname, output_dataname)
-        metric = cost_metric(dict_data, results_dir=args.results_dir)
-        plt.plot(metric, lw=0.75, label=REG_METHOD)
-    
-    REG_METHOD = 'Identity'
-    dict_data = infer_ml_data(input_dataname, output_dataname)
-    metric = cost_metric(dict_data, results_dir=args.results_dir)
-    plt.plot(metric, lw=0.75, label=rf'Identity')
-    
-    plt.xlabel(r'$\tau$')
-    plt.ylabel('Cost Metric')
-    plt.title(rf'Prediction cost for $({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
-    plt.legend(frameon=False, loc='best')
-    save_plot(fig, path=f'{args.results_dir}/plots/', filename='compare_metric_vs_tau')
+    compare_ml_vs_identity()
     
 
 if __name__ == '__main__':

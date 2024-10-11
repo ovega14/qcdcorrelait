@@ -35,6 +35,7 @@ def plot_loss(losses: list[int], results_dir: str) -> None:
 # =============================================================================
 def plot_correlations(
     correlations: list[npt.NDArray], 
+    baseline_corr: npt.NDArray,
     results_dir: str,
     *,
     tau_1: int,
@@ -59,9 +60,10 @@ def plot_correlations(
         tau_2 = tau_1
 
     plt.plot(correlations[:, tau_1, num_tau - 1 + tau_2], ls='dashed')
-    plt.plot(correlations[:, num_tau - 1 + tau_1, num_tau - 1 + tau_2], 
-             ls='dashed')
-    #plt.hlines(1.0, 0, len(correlations), color='black', linestyle='dashed')
+    #plt.plot(correlations[:, num_tau - 1 + tau_1, num_tau - 1 + tau_2], 
+    #         ls='dashed')
+    plt.hlines(1.0, 0, len(correlations), color='black', linestyle='dashed')
+    plt.hlines(baseline_corr[tau_1, num_tau - 1 + tau_2], 0, len(correlations), color='red')
     plt.ylabel('Correlation Coefficient')
     plt.xlabel('Training Iterations')
     title = r"$\rho(O(\tau={{{tau_1}}}), O^{{\rm pred}}(\tau'={{{tau_2}}}))$"

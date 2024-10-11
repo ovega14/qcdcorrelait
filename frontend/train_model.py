@@ -228,6 +228,8 @@ def train_torch_network(
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     losses = []
     correlations = []
+    baseline_corr = np.corrcoef(input_data, output_data, rowvar=False)
+    print('baseline_corr.shape:', baseline_corr.shape)
 
     for i in range(training_steps):
         lr2 = adjust_learning_rate(training_steps, 0.3, lr, optimizer, i)
@@ -261,8 +263,8 @@ def train_torch_network(
 
     # Visualize correlations
     if track_corrs:
-        plot_correlations(correlations, results_dir, tau_1=4)
-        plot_correlations(correlations, results_dir, tau_1=4, tau_2=12)
+        plot_correlations(correlations, baseline_corr, results_dir, tau_1=50)
+        plot_correlations(correlations, baseline_corr, results_dir, tau_1=4, tau_2=12)
         plot_correlation_heatmaps(correlations, results_dir)
         plot_final_correlation_heatmap(correlations, results_dir)
         plot_final_diag_correlations(correlations, results_dir)
