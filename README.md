@@ -1,3 +1,4 @@
+![GitHub License](https://img.shields.io/github/license/ovega14/qcdcorrelait)
 # qcdcorrelait
 This repository contains a framework for performing AI-enhanced computations of correlation functions in quantum chromodynamics on the lattice.
 
