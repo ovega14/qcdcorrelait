@@ -69,7 +69,6 @@ HEAVY_MASSES: list[float] = [
     0.365,
     0.548,
     0.731,
-    #0.767,  # THIS ONE DOESNT EXIST!!
     0.843
 ]
 
@@ -737,10 +736,12 @@ def main(args):
         mi2 = STRANGE_MASS
         mo2 = STRANGE_MASS
         mo1 = 0.164
+        
+        colors = plt.cm.jet(np.linspace(0, 1, len(HEAVY_MASSES)))
         fig = plt.figure(figsize=(8, 8))
         print('-'*120)
         print('HEAVY MASS COMPARISON')
-        for mi1 in HEAVY_MASSES:
+        for i, mi1 in enumerate(HEAVY_MASSES):
             print()
             print(f'Input Masses: mi1 = {mi1}, mi2 = {mi2}')
             print(f'Output Masses: mo1 = {mo1}, mo2 = {mo2}')
@@ -752,11 +753,15 @@ def main(args):
                 train_ind_list, bc_ind_list, unlab_ind_list,
                 reg_method)
             metric = cost_metric(dict_data)
-            plt.plot(metric, lw=0.75, label=rf'$({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
-        plt.xlabel(r'$\tau$')
-        plt.ylabel('Cost Metric')
-        plt.title(f'{reg_method} Prediction Costs')
-        plt.legend(frameon=False, loc='best', prop={'size': 8})
+            plt.plot(metric, lw=0.75, color=colors[i], label=rf'{mi1}')
+        plt.hlines(1.0, xmin=0, xmax=NTAU, color='black', ls='dashed', lw=0.75)
+        plt.xlabel(r'Time Extent, $\tau$')
+        plt.ylabel('Cost')
+        plt.text(x=0.1, y=1.4, 
+                 s=rf'$(m_h, {mi2}) \rightarrow ({mo1}, {mo2})$',
+                 fontsize='small')
+        plt.title(f'Heavy to Heavy Prediction Costs with {reg_method}')
+        plt.legend(frameon=False, loc='best', prop={'size': 12}, title=r'$a m_h$')
         save_plot(fig, path=f'{args.results_dir}/plots/', filename='cost_metric_vs_tau')
 
     compare_heavy_masses()
@@ -765,10 +770,12 @@ def main(args):
     def compare_strange_to_light() -> None:
         mi2 = STRANGE_MASS
         mo2 = LIGHT_MASS
+        
+        colors = plt.cm.jet(np.linspace(0, 1, len(HEAVY_MASSES)))
         fig = plt.figure(figsize=(8, 8))
         print('-'*120)
         print('STRANGE TO LIGHT COMPARISON')
-        for (mi1, mo1) in zip(HEAVY_MASSES, HEAVY_MASSES):
+        for i, (mi1, mo1) in enumerate(zip(HEAVY_MASSES, HEAVY_MASSES)):
             print()
             print(f'Input Masses: mi1 = {mi1}, mi2 = {mi2}')
             print(f'Output Masses: mo1 = {mo1}, mo2 = {mo2}')
@@ -780,11 +787,15 @@ def main(args):
                 train_ind_list, bc_ind_list, unlab_ind_list,
                 reg_method)
             metric = cost_metric(dict_data)
-            plt.plot(metric, lw=0.75, label=rf'$({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
-        plt.xlabel(r'$\tau$')
-        plt.ylabel('Cost Metric')
+            plt.plot(metric, lw=0.75, color=colors[i], label=f'{mi1}')
+        plt.hlines(1.0, xmin=0, xmax=NTAU, color='black', ls='dashed', lw=0.75)
+        plt.xlabel(r'Time Extent, $\tau$')
+        plt.ylabel('Cost')
+        plt.text(x=0.1, y=1.4, 
+                 s=rf'$(m_h, {mi2}) \rightarrow (m_h, {mo2})$',
+                 fontsize='small')
         plt.title(f'Strange to Light Prediction Costs with {reg_method}')
-        plt.legend(frameon=False, loc='best', prop={'size': 8})
+        plt.legend(frameon=False, loc='best', prop={'size': 12}, title=r'$a m_h$')
         save_plot(fig, path=f'{args.results_dir}/plots/', filename='strange2light_cost_metric')
 
     compare_strange_to_light()
@@ -818,13 +829,17 @@ def main(args):
             metric = cost_metric(dict_data)
             plt.plot(metric, lw=0.75, label=reg_method)
         
-        plt.xlabel(r'$\tau$')
-        plt.ylabel('Cost Metric')
+        plt.xlabel(r'Time Extent, $\tau$')
+        plt.ylabel('Cost')
         plt.title(rf'Prediction cost for $({mi1}, {mi2}) \rightarrow ({mo1}, {mo2})$')
-        plt.legend(frameon=False, loc='best', prop={'size': 8})
+        plt.legend(frameon=False, loc='best', prop={'size': 12})
         save_plot(fig, path=f'{args.results_dir}/plots/', filename='compare_metric_vs_tau')
     
     compare_ml_vs_identity()
+
+    # NOISE TO SIGNALS
+    correlator_nts_vs_nsrc()
+    fit_params_nts()  # TODO
     
 
 if __name__ == '__main__':
