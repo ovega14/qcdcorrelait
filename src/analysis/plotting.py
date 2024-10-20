@@ -50,15 +50,15 @@ def plot_correlators(
         label = 'Truth',
     )
 
-    plt.errorbar(
-        x = np.arange(0, num_tau),
-        y = np.average(corr_o_train_truth, axis=-1),
-        yerr = sem(corr_o_train_truth, axis=-1),
-        fmt='s', ms=1.75, 
-        capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
-        c = 'b',
-        label = 'Training set',
-    )
+    #plt.errorbar(
+    #    x = np.arange(0, num_tau),
+    #    y = np.average(corr_o_train_truth, axis=-1),
+    #    yerr = sem(corr_o_train_truth, axis=-1),
+    #    fmt='s', ms=1.75, 
+    #    capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
+    #    c = 'b',
+    #    label = 'Training set',
+    #)
 
     plt.errorbar(
         x = np.arange(0, num_tau),
@@ -67,7 +67,7 @@ def plot_correlators(
         fmt='o', ms=1.75, 
         capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
         c = 'r',
-        label = 'Pred Corrected',
+        label = 'Predicted, Corrected',
     )
 
     plt.errorbar(
@@ -77,7 +77,7 @@ def plot_correlators(
         fmt='o', ms=1.75, 
         capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
         c = 'gold',
-        label = 'Pred Uncorrected',
+        label = 'Predicted, Uncorrected',
     )
 
     # Optionally include ratio method results
@@ -89,7 +89,7 @@ def plot_correlators(
             fmt='d', ms=1.75, 
             capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'c',
-            label = 'Pred Ratio Method',
+            label = 'Ratio Method Prediction',
         )
     if args.compare_ml_ratio_method == 1:
         plt.errorbar(
@@ -99,7 +99,7 @@ def plot_correlators(
             fmt='d', ms=1.75, 
             capsize=1.5, capthick=0.75, markeredgewidth=0.75, elinewidth=0.75,
             c = 'm',
-            label = 'Pred ML+Ratio Method',
+            label = 'ML + Ratio Method Prediction',
         )
 
     plt.xlabel('Time extent')
@@ -114,6 +114,7 @@ def plot_correlators(
     )
 
 
+# TODO: zoomed in with smooth curve, error bar compared to truth data
 """
 def plot_fit_and_correlator(
     num_tau: int,
@@ -246,27 +247,27 @@ def plot_noise_to_signal(
         linewidth=1.4,
         label='Truth',
     )
-    plt.plot(
-        np.arange(0, num_tau),
-        sem(corr_o_labeled_truth, axis=-1)/np.average(corr_o_labeled_truth, axis=-1),
-        c='g',
-        linewidth=1.3,
-        label='Labeled set',
-    )
+    #plt.plot(
+    #    np.arange(0, num_tau),
+    #    sem(corr_o_labeled_truth, axis=-1)/np.average(corr_o_labeled_truth, axis=-1),
+    #    c='g',
+    #    linewidth=1.3,
+    #    label='Labeled set',
+    #)
 
     plt.plot(
         np.arange(0, num_tau),
         sem(corr_o_pred_corrected, axis=-1)/np.average(corr_o_pred_corrected, axis=-1),
         c='r',
         linewidth=1.2,
-        label='Pred Corrected',
+        label='Predicted, Corrected',
     )
     plt.plot(
         np.arange(0, num_tau),
         sem(corr_o_pred_uncorrected, axis=-1)/np.average(corr_o_pred_uncorrected, axis=-1),
         c='gold',
         linewidth=1.1,
-        label='Pred Uncorrected',
+        label='Predicted, Uncorrected',
     )
 
     if args.compare_ratio_method == 1:
@@ -275,7 +276,7 @@ def plot_noise_to_signal(
             gv.sdev(ds_ratio_method['ratio_method_pred']) / gv.mean(ds_ratio_method['ratio_method_pred']),
             c='c',
             linewidth=1.0,
-            label='Pred Ratio Method',
+            label='Ratio Method Prediction',
         )
 
     if args.compare_ml_ratio_method == 1:
@@ -284,14 +285,14 @@ def plot_noise_to_signal(
             gv.sdev(ds_ml_ratio_method['ml_ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ml_ratio_method_pred']),
             c='m',
             linewidth=0.9,
-            label='Pred ML+Ratio Method',
+            label='ML + Ratio Method Prediction',
         )
 
     plt.xlabel('Time extent')
     plt.ylabel('NtS')
     plt.yscale(yscale)
 
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=12, frameon=False)
     save_plot(fig=fig, path=f'{results_dir}/plots/', filename='pred_nts')
     
 
@@ -320,27 +321,27 @@ def plot_normalized_noise_to_signal(
         label='Truth',
     )
 
-    plt.plot(
-        np.arange(0, num_tau),
-        sem(corr_o_labeled_truth, axis=-1)/np.average(corr_o_labeled_truth, axis=-1)/normalization_denominator,
-        c='g',
-        linewidth=1.3,
-        label='Labeled set',
-    )
+    #plt.plot(
+    #    np.arange(0, num_tau),
+    #    sem(corr_o_labeled_truth, axis=-1)/np.average(corr_o_labeled_truth, axis=-1)/normalization_denominator,
+    #   c='g',
+    #   linewidth=1.3,
+    #    label='Labeled set',
+    #)
 
     plt.plot(
         np.arange(0, num_tau),
         sem(corr_o_pred_corrected, axis=-1)/np.average(corr_o_pred_corrected, axis=-1)/normalization_denominator,
         c='r',
         linewidth=1.2,
-        label='Pred Corrected',
+        label='Predicted, Corrected',
     )
     plt.plot(
         np.arange(0, num_tau),
         sem(corr_o_pred_uncorrected, axis=-1)/np.average(corr_o_pred_uncorrected, axis=-1)/normalization_denominator,
         c='gold',
         linewidth=1.1,
-        label='Pred Uncorrected',
+        label='Predicted, Uncorrected',
     )
 
     if args.compare_ratio_method == 1:
@@ -349,7 +350,7 @@ def plot_normalized_noise_to_signal(
             gv.sdev(ds_ratio_method['ratio_method_pred']) / gv.mean(ds_ratio_method['ratio_method_pred'])/normalization_denominator,
             c='c',
             linewidth=1.0,
-            label='Pred Ratio Method',
+            label='Ratio Method Prediction',
         )
 
     if args.compare_ml_ratio_method == 1:
@@ -358,14 +359,14 @@ def plot_normalized_noise_to_signal(
             gv.sdev(ds_ml_ratio_method['ml_ratio_method_pred']) / gv.mean(ds_ml_ratio_method['ml_ratio_method_pred'])/normalization_denominator,
             c='m',
             linewidth=0.9,
-            label='Pred ML+Ratio Method',
+            label='ML + Ratio Method Prediction',
         )
 
     plt.xlabel('Time extent')
     plt.ylabel('NtS / (Truth NtS)')
     plt.yscale('linear')
 
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=12, frameon=False)
     save_plot(
         fig=fig, 
         path=f'{results_dir}/plots/', 

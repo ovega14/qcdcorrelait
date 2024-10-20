@@ -288,8 +288,8 @@ if __name__ == '__main__':
 
     add('--seed', type=int, default=42)
     add('--reg_method', type=str, default='MLP')  # TODO: remove this arg
-    add('--compare_ratio_method', type=int, default=0)
-    add('--compare_ml_ratio_method', type=int, default=0)
+    add('--compare_ratio_method', type=int, default=1)
+    add('--compare_ml_ratio_method', type=int, default=1)
     add('--hdf5_filename', type=str, 
         default='../data/l64192a_run2_810-6996_1028cfgs.hdf5')
     add('--input_dataname', type=str)

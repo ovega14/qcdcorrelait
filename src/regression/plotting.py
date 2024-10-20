@@ -58,9 +58,9 @@ def plot_correlations(
     if tau_2 is None:
         tau_2 = tau_1
 
-    plt.plot(correlations[:, tau_1, num_tau - 1 + tau_2], ls='dashed')
-    plt.plot(correlations[:, num_tau - 1 + tau_1, num_tau - 1 + tau_2], 
-             ls='dashed')
+    plt.plot(correlations[:, tau_1, num_tau - 1 + tau_2])
+    #plt.plot(correlations[:, num_tau - 1 + tau_1, num_tau - 1 + tau_2], 
+    #         ls='dashed')
     #plt.hlines(1.0, 0, len(correlations), color='black', linestyle='dashed')
     plt.ylabel('Correlation Coefficient')
     plt.xlabel('Training Iterations')
@@ -93,14 +93,16 @@ def plot_correlation_heatmaps(
     fig.supylabel(r"$\rho(O(\tau), O^{\mathrm{pred}}(\tau'))$")
     for i in range(4):
         ax = axes[i]
-        im = ax.imshow(correlations[50*i], cmap='hot')
+        im = ax.imshow(correlations[15*i], cmap='hot')
         im.norm.autoscale([0, 1])
-        ax.set_xlabel(f'Iter {50*i}')
-    im = axes[-1].imshow(correlations[-1], cmap='hot')
+        ax.set_xlabel(f'Iteration {15*i}')
+    im = axes[-1].imshow(correlations[60], cmap='hot')
     im.norm.autoscale([0, 1])
-    axes[-1].set_xlabel(f'Iter {len(correlations)}')
-    #cbar_ax = fig.add_axes([0.95, 0.15, 0.05, 0.])
-    #fig.colorbar(im, cax=cbar_ax)  # TODO
+    axes[-1].set_xlabel('Iteration 60')
+    # Colorbar TODO
+    cbar_ax = fig.add_axes([1.00, 0.15, 0.5, 0.7])
+    plt.subplots_adjust(right=0.9)
+    fig.colorbar(im, cax=cbar_ax)
     save_plot(fig=fig, path=f'{results_dir}/plots/', 
               filename='correlation_heatmaps')
 
