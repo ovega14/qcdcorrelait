@@ -1,4 +1,5 @@
-![GitHub License](https://img.shields.io/github/license/ovega14/qcdcorrelait) ![GitHub contributors](https://img.shields.io/github/contributors-anon/ovega14/qcdcorrelait) [![arXiv](https://img.shields.io/badge/arXiv-2412.21147-b31b1b.svg)](https://arxiv.org/abs/2412.21147)
+![GitHub License](https://img.shields.io/github/license/ovega14/qcdcorrelait) ![GitHub contributors](https://img.shields.io/github/contributors/ovega14/qcdcorrelait?color=%230000FF)
+ [![arXiv](https://img.shields.io/badge/arXiv-2412.21147-b31b1b.svg)](https://arxiv.org/abs/2412.21147)
 
 
 # qcdcorrelait
