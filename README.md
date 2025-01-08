@@ -7,7 +7,7 @@ This repository contains a framework for performing AI-enhanced computations of 
 
 ## Authors:
 - Jiayu Shen (jiayus3[at]illinois[dot]edu)
-- Octavio Vega (octavio5[at]illinois[dot]edu)
+- [Octavio Vega](https://github.com/ovega14) (octavio5[at]illinois[dot]edu)
 - Andrew Lytle (atlytle[at]illinois[dot]edu)
 
 ## Data:
