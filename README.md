@@ -15,4 +15,4 @@ This repository contains a framework for performing AI-enhanced computations of 
 The data file `l64192a_run2_810-6996_1028cfgs.hdf5` is required to run the scripts. In order for everything to work properly, this file should be inside a folder called `data` that lives at the top level of the repo.
 
 ## Related Work
-O. Vega, A. Lytle, J. Shen, and A. X. El-Khadra, Using AI for Efficient Statistical Inference of Lattice Correlators Across Mass Parameters, [PoS LATTICE2024 (2025) 420](https://doi.org/10.22323/1.466.0420 ) [[`2412.21147`](https://arxiv.org/abs/2412.21147)].
+- O. Vega, A. Lytle, J. Shen, and A. X. El-Khadra, *Using AI for Efficient Statistical Inference of Lattice Correlators Across Mass Parameters*, [Proceedings of Science LATTICE2024 (2025) 420](https://doi.org/10.22323/1.466.0420 ) [[`hep-lat/2412.21147`](https://arxiv.org/abs/2412.21147)].
